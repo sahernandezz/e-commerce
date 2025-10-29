@@ -21,6 +21,12 @@ Debido a restricciones de tiempo, no se completaron todos los módulos. Sin emba
 - Orden
 - Producto
 - Usuario
+  
+---
+
+## LINKS DEL REPOSITORIO
+- **Backend**: [Enlace al repositorio del Backend](https://github.com/sahernandezz/ecommerce-back-end)
+- **Frontend**: [Enlace al repositorio del Frontend](https://github.com/sahernandezz/ecommerce-frond-end)
 
 ---
 ## PROBLEMAS Y SOLUCIONES
@@ -29,9 +35,3 @@ Debido a restricciones de tiempo, no se completaron todos los módulos. Sin emba
 Durante el desarrollo del proyecto se presentaron problemas de tiempo, lo que impidió la finalización de todos los requisitos establecidos. A pesar de ello, se logró un avance significativo en la implementación de los módulos clave y se establecieron las bases para la escalabilidad y continuidad del desarrollo.
 
 ![Screenshot 2023-06-05 232427](https://github.com/user-attachments/assets/c681f6ad-66a2-4f3f-ae33-57cb279e5f77)
-
----
-
-## LINKS DEL REPOSITORIO
-- **Backend**: [Enlace al repositorio del Backend](https://github.com/sahernandezz/ecommerce-back-end)
-- **Frontend**: [Enlace al repositorio del Frontend](https://github.com/sahernandezz/ecommerce-frond-end)
