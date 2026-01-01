@@ -1,0 +1,194 @@
+version: '3.8'
+
+# =============================================
+# Docker Compose - Ecommerce Full Stack
+# =============================================
+# Incluye: PostgreSQL Master + Replica, Redis, Backend, Frontend, Jenkins
+# =============================================
+
+services:
+  # =============================================
+  # BASE DE DATOS - PostgreSQL Master (Escritura)
+  # =============================================
+  postgres-master:
+    image: 'postgres:16'
+    container_name: ecommerce-postgres-master
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c hot_standby=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # =============================================
+  # BASE DE DATOS - PostgreSQL Replica (Lectura)
+  # =============================================
+  postgres-replica:
+    image: 'postgres:16'
+    container_name: ecommerce-postgres-replica
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # =============================================
+  # REDIS - Almacenamiento de Tokens JWT
+  # =============================================
+  redis:
+    image: 'redis:7-alpine'
+    container_name: ecommerce-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes --requirepass redis_secure_password_123
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_secure_password_123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # =============================================
+  # BACKEND - Spring Boot
+  # =============================================
+  backend:
+    build:
+      context: ./ecommerce-back-end-master
+      dockerfile: Dockerfile
+    container_name: ecommerce-backend
+    ports:
+      - '8080:8080'
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      postgres-replica:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # =============================================
+  # FRONTEND - Next.js
+  # =============================================
+  frontend:
+    build:
+      context: ./ecommerce-frond-end-master
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8080
+    container_name: ecommerce-frontend
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # =============================================
+  # JENKINS - CI/CD
+  # =============================================
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: ecommerce-jenkins
+    privileged: true
+    user: root
+    ports:
+      - '8081:8080'
+      - '50000:50000'
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # =============================================
+  # ADMINER - Database Management UI
+  # =============================================
+  adminer:
+    image: adminer:latest
+    container_name: ecommerce-adminer
+    ports:
+      - '8083:8080'
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres-master
+    depends_on:
+      - postgres-master
+    networks:
+      - ecommerce-network
+
+  # =============================================
+  # REDIS COMMANDER - Redis UI
+  # =============================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ecommerce-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:redis_secure_password_123
+    ports:
+      - '8082:8081'
+    depends_on:
+      - redis
+    networks:
+      - ecommerce-network
+
+# =============================================
+# VOLUMES
+# =============================================
+volumes:
+  postgres_master_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  redis_data:
+    driver: local
+  jenkins_home:
+    driver: local
+
+# =============================================
+# NETWORKS
+# =============================================
+networks:
+  ecommerce-network:
+    driver: bridge
+
