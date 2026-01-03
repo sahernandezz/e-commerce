@@ -25,35 +25,6 @@ export const Drawer = () => {
                             transition
                             className="pointer-events-auto relative w-screen max-w-md transform transition duration-500 ease-in-out data-[closed]:translate-x-full sm:duration-700"
                         >
-                            <TransitionChild>
-                                <div
-                                    className="absolute left-0 top-0 -ml-8 flex pr-2 pt-4 duration-500 ease-in-out data-[closed]:opacity-0 sm:-ml-10 sm:pr-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setOpen(false)}
-                                        className="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-                                    >
-                                        <span className="absolute -inset-2.5"/>
-                                        <span className="sr-only">Close panel</span>
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                            stroke="currentColor"
-                                            aria-hidden="true"
-                                            className="h-6"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M6 18 18 6M6 6l12 12"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </TransitionChild>
-
                             <div
                                 className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-neutral-200 bg-white/80 p-6 text-black backdrop-blur-xl md:w-[450px] dark:border-neutral-700 dark:bg-black/80 dark:text-white">
 
@@ -72,7 +43,8 @@ export const Drawer = () => {
                                                 data-slot="icon"
                                                 className="h-6 transition-all ease-in-out hover:scale-110"
                                             >
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                                <path strokeLinecap="round" strokeLinejoin="round"
+                                                      d="M6 18 18 6M6 6l12 12"/>
                                             </svg>
                                         </div>
                                     </button>
@@ -124,8 +96,8 @@ export const Drawer = () => {
 
                                             <div>
                                                 <Link href="/pay" onClick={() => setOpen(false)}
-                                                    className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
-                                                    type="submit">Proceed to Checkout
+                                                      className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
+                                                      type="submit">Proceed to Checkout
                                                 </Link>
                                             </div>
                                         </>

@@ -1,5 +1,18 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source "../components/**/*.{ts,tsx}";
-@source "../app/**/*.{ts,tsx}";
-@source "../pages/**/*.{ts,tsx}";
+/* Custom base styles */
+@layer base {
+  body {
+    @apply bg-white dark:bg-neutral-900 text-black dark:text-white;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+

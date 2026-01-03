@@ -1,8 +1,6 @@
 import Link from "next/link";
 
 export default function PaySuccessPage() {
-
-
     return (
         <div className="w-full flex justify-center">
             <div className="p-12">
@@ -13,15 +11,22 @@ export default function PaySuccessPage() {
                         </path>
                     </svg>
                     <div className="text-center">
-                        <h3 className="md:text-2xl text-base text-gray-900 dark:text-gray-100 font-semibold text-center">Payment
-                            Done!</h3>
-                        <p className="text-gray-600 dark:text-gray-400 my-2">Thank you for completing your secure online
-                            payment.</p>
-                        <p className="dark:text-gray-300"> Have a great day! </p>
+                        <h3 className="md:text-2xl text-base text-gray-900 dark:text-gray-100 font-semibold text-center">
+                            ¡Pago Completado!
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 my-2">
+                            Gracias por completar tu pago de forma segura.
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400 my-2">
+                            Recibirás un correo de confirmación con los detalles de tu orden.
+                        </p>
+                        <p className="dark:text-gray-300 text-sm mt-4">
+                            ¡Que tengas un excelente día!
+                        </p>
                         <div className="py-10 text-center">
                             <Link href="/"
-                                  className="px-12 bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white font-semibold py-3">
-                                GO BACK
+                                  className="px-12 bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded transition-colors">
+                                VOLVER AL INICIO
                             </Link>
                         </div>
                     </div>

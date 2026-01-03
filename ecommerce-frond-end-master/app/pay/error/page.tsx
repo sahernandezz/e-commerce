@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 export default function PayErrorPage() {
-
     return (
         <div className="w-full flex justify-center">
             <div className="p-12">
@@ -12,15 +11,26 @@ export default function PayErrorPage() {
                         </path>
                     </svg>
                     <div className="text-center">
-                        <h3 className="md:text-2xl text-base text-gray-900 dark:text-gray-100 font-semibold text-center">Payment
-                            Error!</h3>
-                        <p className="text-gray-600 dark:text-gray-400 my-2">There was an issue processing your
-                            payment.</p>
-                        <p className="dark:text-gray-300"> Please try again later. </p>
-                        <div className="py-10 text-center">
+                        <h3 className="md:text-2xl text-base text-gray-900 dark:text-gray-100 font-semibold text-center">
+                            ¡Error en el Pago!
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 my-2">
+                            Hubo un problema al procesar tu pago.
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400 my-2">
+                            Por favor verifica tus datos e intenta nuevamente.
+                        </p>
+                        <p className="dark:text-gray-300 text-sm mt-4">
+                            Tu carrito se mantiene guardado.
+                        </p>
+                        <div className="py-10 text-center space-x-4">
+                            <Link href="/pay"
+                                  className="px-8 bg-blue-600 hover:bg-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-3 rounded transition-colors">
+                                INTENTAR DE NUEVO
+                            </Link>
                             <Link href="/"
-                                  className="px-12 bg-red-600 hover:bg-red-500 dark:bg-red-700 dark:hover:bg-red-600 text-white font-semibold py-3">
-                                GO BACK
+                                  className="px-8 bg-red-600 hover:bg-red-500 dark:bg-red-700 dark:hover:bg-red-600 text-white font-semibold py-3 rounded transition-colors">
+                                VOLVER AL INICIO
                             </Link>
                         </div>
                     </div>

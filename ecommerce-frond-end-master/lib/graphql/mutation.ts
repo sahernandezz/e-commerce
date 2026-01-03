@@ -29,6 +29,7 @@ const LOGIN = gql`
                 id
                 email
                 name
+                role
             }
         }
     }
@@ -43,6 +44,7 @@ const REGISTER = gql`
                 id
                 email
                 name
+                role
             }
         }
     }
@@ -63,6 +65,7 @@ interface AuthResponse {
         id: string;
         email: string;
         name: string | null;
+        role: string | null;
     };
 }
 

@@ -9,13 +9,6 @@ const config: Config = {
     './src/**/*.{ts,tsx}',
   ],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       keyframes: {
         "accordion-down": {
@@ -37,3 +30,5 @@ const config: Config = {
 }
 
 export default config
+
+

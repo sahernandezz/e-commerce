@@ -31,7 +31,7 @@ export const Navbar = () => {
     const { open, setOpen } = useDrawer();
     const { cart } = useCart();
     const { setOpen: setLoginOpen } = useLoginModal();
-    const { isAuthenticated, user, logout } = useAuth();
+    const { isAuthenticated, user, logout, isAdmin } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -132,16 +132,46 @@ export const Navbar = () => {
                                                 <div className="border-b border-neutral-200 px-4 py-2 dark:border-neutral-700">
                                                     <p className="text-sm font-medium">{user?.name || 'Usuario'}</p>
                                                     <p className="text-xs text-neutral-500">{user?.email}</p>
+                                                    {isAdmin && (
+                                                        <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-200">
+                                                            Admin
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <button
-                                                    onClick={() => {
-                                                        logout();
-                                                        setUserMenuOpen(false);
-                                                    }}
-                                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                                <Link
+                                                    href="/profile"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                                                 >
-                                                    Cerrar sesión
-                                                </button>
+                                                    👤 Mi Perfil
+                                                </Link>
+                                                <Link
+                                                    href="/my-orders"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                                                >
+                                                    📋 Mis Órdenes
+                                                </Link>
+                                                {isAdmin && (
+                                                    <Link
+                                                        href="/admin"
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="block w-full px-4 py-2 text-left text-sm text-purple-600 hover:bg-neutral-100 dark:text-purple-400 dark:hover:bg-neutral-800"
+                                                    >
+                                                        ⚙️ Panel Admin
+                                                    </Link>
+                                                )}
+                                                <div className="border-t border-neutral-200 dark:border-neutral-700 mt-1 pt-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            logout();
+                                                            setUserMenuOpen(false);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                                    >
+                                                        🚪 Cerrar sesión
+                                                    </button>
+                                                </div>
                                             </div>
                                         </>
                                     )}

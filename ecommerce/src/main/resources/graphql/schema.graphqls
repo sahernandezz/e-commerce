@@ -1,0 +1,260 @@
+# =============================================
+# Schema GraphQL - Ecommerce
+# =============================================
+
+type Query {
+    # Public queries
+    getAllProductsActive: [Product]
+    getAllProductsActiveByCategoryId(categoryId: String!): [Product]
+    getProductById(id: String!): Product
+    getAllProductsActiveByName(name: String!): [Product]
+    getAllCategoriesActive: [Category]
+
+    # User queries
+    getMyOrders: [Order]
+
+    # Admin queries - Paginadas
+    getDashboardStats: DashboardStats
+    getProductsPaginated(page: Int!, size: Int!, status: String, search: String): ProductPage
+    getCategoriesPaginated(page: Int!, size: Int!, status: String, search: String): CategoryPage
+    getOrdersPaginated(page: Int!, size: Int!, status: String, customerEmail: String): OrderPage
+    getUsersPaginated(page: Int!, size: Int!, status: String, search: String): UserPage
+    getTopSellingProducts(limit: Int): [TopSellingProduct]
+    getRecentOrders(limit: Int): [Order]
+
+    # Enum values for frontend
+    getProductStatuses: [StatusOption]
+    getCategoryStatuses: [StatusOption]
+    getOrderStatuses: [StatusOption]
+    getUserStatuses: [StatusOption]
+    getPaymentMethods: [StatusOption]
+}
+
+type Mutation {
+    # Products
+    addProduct(input: InputProductRequest): Product
+    updateProduct(id: ID!, input: InputProductRequest): Product
+    deleteProduct(id: ID!): Boolean
+
+    # Categories
+    createCategory(input: InputCategoryRequest): Category
+    updateCategory(id: ID!, input: InputCategoryRequest): Category
+    deleteCategory(id: ID!): Boolean
+
+    # Orders
+    createOrder(input: InputOrderRequest!): String
+    updateOrderStatus(id: ID!, status: String!): Order
+
+    # Users
+    updateUserStatus(id: ID!, status: String!): User
+
+    # Auth
+    login(input: LoginInput!): AuthResponse
+    register(input: RegisterInput!): AuthResponse
+}
+
+# =============================================
+# Pagination Types
+# =============================================
+
+type ProductPage {
+    content: [Product]
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+    first: Boolean!
+    last: Boolean!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+type CategoryPage {
+    content: [Category]
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+    first: Boolean!
+    last: Boolean!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+type OrderPage {
+    content: [Order]
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+    first: Boolean!
+    last: Boolean!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+type UserPage {
+    content: [User]
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+    first: Boolean!
+    last: Boolean!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+type StatusOption {
+    value: String!
+    label: String!
+}
+
+# =============================================
+# Auth Types
+# =============================================
+
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input RegisterInput {
+    name: String!
+    email: String!
+    password: String!
+}
+
+type AuthResponse {
+    message: String
+    token: String
+    user: UserResponse
+}
+
+type UserResponse {
+    id: ID!
+    email: String!
+    name: String
+    role: String
+}
+
+# =============================================
+# Product Types
+# =============================================
+
+type Product {
+    id: ID!
+    name: String!
+    price: Float!
+    description: String
+    status: String!
+    createdAt: String
+    updatedAt: String
+    discount: Int
+    category: Category
+    imagesUrl: [String]
+    colors: [String]
+    sizes: [String]
+}
+
+type Category {
+    id: ID!
+    name: String!
+    status: String!
+}
+
+input InputProductRequest {
+    name: String!
+    price: Int!
+    description: String
+    categoryId: Int!
+    discount: Int
+    imagesUrl: [String]
+    colors: [String]
+    sizes: [String]
+}
+
+input InputCategoryRequest {
+    name: String!
+}
+
+# =============================================
+# Order Types
+# =============================================
+
+type Order {
+    id: ID!
+    orderCode: String!
+    emailCustomer: String!
+    address: String!
+    city: String!
+    description: String
+    paymentMethod: String!
+    status: String!
+    total: Float!
+    createdAt: String
+    updatedAt: String
+    products: [OrderProduct]
+}
+
+type OrderProduct {
+    id: ID!
+    quantity: Int!
+    unitPrice: Int!
+    total: Int!
+    name: String
+    idProduct: ID
+    size: String
+    color: String
+    discount: Int
+}
+
+input InputOrderProductRequest {
+    quantity: Int!
+    productId: ID!
+    color: String
+    size: String
+}
+
+input InputOrderRequest {
+    emailCustomer: String!
+    address: String!
+    city: String!
+    description: String!
+    paymentMethod: String!
+    products: [InputOrderProductRequest]
+}
+
+# =============================================
+# User Types
+# =============================================
+
+type User {
+    id: ID!
+    email: String!
+    name: String
+    role: String
+    status: String!
+    createdAt: String
+}
+
+# =============================================
+# Dashboard Types
+# =============================================
+
+type DashboardStats {
+    totalProducts: Int!
+    totalOrders: Int!
+    totalUsers: Int!
+    pendingOrders: Int!
+    totalRevenue: Float!
+    averageOrderValue: Float!
+    ordersThisMonth: Int!
+    newUsersThisMonth: Int!
+}
+
+type TopSellingProduct {
+    product: Product!
+    totalSold: Int!
+    revenue: Float!
+}

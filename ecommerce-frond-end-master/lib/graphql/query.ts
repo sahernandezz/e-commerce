@@ -126,3 +126,72 @@ export const getAllProductsActiveByName = async (name: string) => {
         throw error;
     }
 };
+
+// Get My Orders (for authenticated users)
+const GET_MY_ORDERS = gql`
+    query getMyOrders {
+        getMyOrders {
+            id
+            orderCode
+            emailCustomer
+            address
+            city
+            description
+            paymentMethod
+            status
+            total
+            createdAt
+            updatedAt
+            products {
+                id
+                quantity
+                price
+                size
+                color
+                product {
+                    id
+                    name
+                    imagesUrl
+                }
+            }
+        }
+    }
+`;
+
+export interface OrderProduct {
+    id: string;
+    quantity: number;
+    price: number;
+    size?: string;
+    color?: string;
+    product?: {
+        id: string;
+        name: string;
+        imagesUrl: string[];
+    };
+}
+
+export interface UserOrder {
+    id: string;
+    orderCode: string;
+    emailCustomer: string;
+    address: string;
+    city: string;
+    description?: string;
+    paymentMethod: string;
+    status: string;
+    total: number;
+    createdAt: string;
+    updatedAt?: string;
+    products?: OrderProduct[];
+}
+
+export const getMyOrders = async (): Promise<UserOrder[]> => {
+    try {
+        const data: any = await getClient().request(GET_MY_ORDERS);
+        return data.getMyOrders || [];
+    } catch (error) {
+        console.error('Error fetching my orders:', error);
+        return [];
+    }
+};

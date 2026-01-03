@@ -1,0 +1,53 @@
+# =============================================
+# Perfil LOCAL (Default) - Desarrollo sin Docker
+# =============================================
+# Usa PostgreSQL en localhost
+# Usuario postgres para ambos DataSources
+# =============================================
+
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  # =============================================
+  # Configuración CQRS - DataSources
+  # =============================================
+  datasource:
+    # DataSource de escritura (Master)
+    write:
+      url: jdbc:postgresql://localhost:5432/ecommerce
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        pool-name: WriteHikariPool
+        maximum-pool-size: 10
+        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+
+    # DataSource de lectura (Replica)
+    read:
+      url: jdbc:postgresql://localhost:5433/ecommerce
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        pool-name: ReadHikariPool
+        maximum-pool-size: 20
+        minimum-idle: 10
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+
+
+auth:
+  email:
+    url: http://localhost:3000
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+

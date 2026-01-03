@@ -1,0 +1,90 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        format_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  graphql:
+    graphiql:
+      enabled: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:test@gmail.com}
+    password: ${MAIL_PASSWORD:test}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+  thymeleaf:
+    prefix: classpath:/templates/mail/
+    suffix: .html
+
+# =============================================
+# Configuración Actuator
+# =============================================
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# =============================================
+# Configuración JWT
+# =============================================
+expiration:
+  time:
+    token: 1
+
+# =============================================
+# Configuración de Autenticación
+# =============================================
+auth:
+  user:
+    time_recovery_code: 10
+    code_length: 8
+  email:
+    recovery_code:
+      url: /recover/
+      subject: Recuperar contraseña
+      templete: recoveryMail
+    recovery_confirmation:
+      subject: Hubo un cambio en tu cuenta
+      templete: confirmationMail
+    url: ${AUTH_EMAIL_URL:http://localhost:3000}
+
+# =============================================
+# Configuración de Logging
+# =============================================
+logging:
+  level:
+    com.challenge.ecommercebackend: INFO
+    org.springframework.jdbc.datasource: WARN
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql: OFF
+
