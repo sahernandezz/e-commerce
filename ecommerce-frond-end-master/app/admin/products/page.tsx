@@ -3,17 +3,31 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth';
 import {
-  getAllProducts,
-  getAllCategories,
-  deleteProduct,
+  getProductsPaginated,
+  getAllCategoriesActive,
+  updateProductStatus,
   createProduct,
   updateProduct,
   Product,
   Category,
-  ProductInput,
+  PageResponse,
   setAuthToken
 } from '@/lib/graphql/admin';
 import { currencyFormatter as formatCurrency } from '@/lib/currencyFormatter';
+import { getProductStatusLabel } from '@/lib/status';
+import { PlusIcon, EditIcon, PackageIcon } from '@/components/icons';
+import { ConfirmModal } from '@/components/ConfirmModal';
+
+interface ProductInput {
+  name: string;
+  price: number;
+  description?: string;
+  categoryId: number;
+  discount?: number;
+  imagesUrl?: string[];
+  colors?: string[];
+  sizes?: string[];
+}
 
 export default function AdminProductsPage() {
   const { token } = useAuth();
@@ -25,6 +39,9 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [showToggleModal, setShowToggleModal] = useState(false);
+  const [togglingProduct, setTogglingProduct] = useState<Product | null>(null);
+  const [toggleLoading, setToggleLoading] = useState(false);
 
   const [formData, setFormData] = useState<ProductInput>({
     name: '',
@@ -48,10 +65,10 @@ export default function AdminProductsPage() {
     try {
       setLoading(true);
       const [productsData, categoriesData] = await Promise.all([
-        getAllProducts(),
-        getAllCategories()
+        getProductsPaginated(0, 100),
+        getAllCategoriesActive()
       ]);
-      setProducts(productsData);
+      setProducts(productsData.content);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -60,12 +77,27 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de eliminar este producto?')) {
-      const success = await deleteProduct(id);
+  const handleToggleStatus = (product: Product) => {
+    setTogglingProduct(product);
+    setShowToggleModal(true);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!togglingProduct) return;
+
+    setToggleLoading(true);
+    try {
+      const newStatus = togglingProduct.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      const success = await updateProductStatus(togglingProduct.id, newStatus);
       if (success) {
-        setProducts(products.filter(p => p.id !== id));
+        setProducts(products.map(p =>
+          p.id === togglingProduct.id ? { ...p, status: newStatus } : p
+        ));
       }
+    } finally {
+      setToggleLoading(false);
+      setShowToggleModal(false);
+      setTogglingProduct(null);
     }
   };
 
@@ -75,7 +107,7 @@ export default function AdminProductsPage() {
       name: product.name,
       price: product.price,
       description: product.description || '',
-      categoryId: parseInt(product.category.id),
+      categoryId: product.category?.id ? parseInt(product.category.id) : 0,
       discount: product.discount || 0,
       imagesUrl: product.imagesUrl || [],
       colors: product.colors || [],
@@ -128,7 +160,7 @@ export default function AdminProductsPage() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || product.category.id === filterCategory;
+    const matchesCategory = !filterCategory || product.category?.id === filterCategory;
     const matchesStatus = !filterStatus || product.status === filterStatus;
     return matchesSearch && matchesCategory && matchesStatus;
   });
@@ -155,7 +187,7 @@ export default function AdminProductsPage() {
           onClick={handleCreate}
           className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-blue-500/30 flex items-center gap-2"
         >
-          <span>➕</span>
+          <PlusIcon className="w-5 h-5" />
           Nuevo Producto
         </button>
       </div>
@@ -252,7 +284,7 @@ export default function AdminProductsPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                            📦
+                            <PackageIcon className="w-6 h-6" />
                           </div>
                         )}
                       </div>
@@ -268,7 +300,7 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 bg-neutral-100 dark:bg-neutral-900 rounded-full text-sm text-neutral-700 dark:text-neutral-300">
-                      {product.category.name}
+                      {product.category?.name || 'Sin categoría'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -285,7 +317,7 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(product.status)}`}>
-                      {product.status}
+                      {getProductStatusLabel(product.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -295,14 +327,18 @@ export default function AdminProductsPage() {
                         className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition"
                         title="Editar"
                       >
-                        ✏️
+                        <EditIcon className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(product.id)}
-                        className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
-                        title="Eliminar"
+                        onClick={() => handleToggleStatus(product)}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                          product.status === 'ACTIVE' 
+                            ? 'text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30' 
+                            : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                        }`}
+                        title={product.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                       >
-                        🗑️
+                        {product.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                       </button>
                     </div>
                   </td>
@@ -313,7 +349,9 @@ export default function AdminProductsPage() {
 
           {filteredProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-4xl mb-4">📦</p>
+              <div className="flex justify-center mb-4">
+                <PackageIcon className="w-12 h-12 text-neutral-400" />
+              </div>
               <p className="text-neutral-500 dark:text-neutral-400">No se encontraron productos</p>
             </div>
           )}
@@ -453,6 +491,25 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación de cambio de estado */}
+      <ConfirmModal
+        isOpen={showToggleModal}
+        onClose={() => {
+          setShowToggleModal(false);
+          setTogglingProduct(null);
+        }}
+        onConfirm={confirmToggleStatus}
+        title={togglingProduct?.status === 'ACTIVE' ? 'Desactivar producto' : 'Activar producto'}
+        message={togglingProduct?.status === 'ACTIVE'
+          ? `¿Estás seguro de que deseas desactivar el producto "${togglingProduct?.name}"?`
+          : `¿Estás seguro de que deseas activar el producto "${togglingProduct?.name}"?`
+        }
+        confirmText={togglingProduct?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+        cancelText="Cancelar"
+        variant={togglingProduct?.status === 'ACTIVE' ? 'warning' : 'info'}
+        loading={toggleLoading}
+      />
     </div>
   );
 }

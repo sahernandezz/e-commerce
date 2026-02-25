@@ -7,6 +7,7 @@ import { useCart } from "@/context/cart";
 import { useLoginModal } from "@/context/login-modal";
 import { useAuth } from "@/context/auth";
 import { useState, useEffect } from "react";
+import { UserIcon, ClipboardIcon, SettingsIcon, LogoutIcon } from "@/components/icons";
 
 // Icono del sol (light mode)
 const SunIcon = () => (
@@ -141,24 +142,24 @@ export const Navbar = () => {
                                                 <Link
                                                     href="/profile"
                                                     onClick={() => setUserMenuOpen(false)}
-                                                    className="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                                                    className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                                                 >
-                                                    👤 Mi Perfil
+                                                    <UserIcon className="w-4 h-4" /> Mi Perfil
                                                 </Link>
                                                 <Link
                                                     href="/my-orders"
                                                     onClick={() => setUserMenuOpen(false)}
-                                                    className="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                                                    className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                                                 >
-                                                    📋 Mis Órdenes
+                                                    <ClipboardIcon className="w-4 h-4" /> Mis Órdenes
                                                 </Link>
                                                 {isAdmin && (
                                                     <Link
                                                         href="/admin"
                                                         onClick={() => setUserMenuOpen(false)}
-                                                        className="block w-full px-4 py-2 text-left text-sm text-purple-600 hover:bg-neutral-100 dark:text-purple-400 dark:hover:bg-neutral-800"
+                                                        className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-purple-600 hover:bg-neutral-100 dark:text-purple-400 dark:hover:bg-neutral-800"
                                                     >
-                                                        ⚙️ Panel Admin
+                                                        <SettingsIcon className="w-4 h-4" /> Panel Admin
                                                     </Link>
                                                 )}
                                                 <div className="border-t border-neutral-200 dark:border-neutral-700 mt-1 pt-1">
@@ -167,9 +168,9 @@ export const Navbar = () => {
                                                             logout();
                                                             setUserMenuOpen(false);
                                                         }}
-                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                                        className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                                                     >
-                                                        🚪 Cerrar sesión
+                                                        <LogoutIcon className="w-4 h-4" /> Cerrar sesión
                                                     </button>
                                                 </div>
                                             </div>

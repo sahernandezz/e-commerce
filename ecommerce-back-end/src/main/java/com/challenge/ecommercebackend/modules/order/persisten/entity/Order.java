@@ -29,7 +29,7 @@ public class Order implements Serializable {
 
     @NotBlank(message = "El correo electrónico es requerido")
     @Email(message = "El correo electrónico debe ser válido")
-    @Column(nullable = false)
+    @Column(name = "email_customer", nullable = false)
     private String emailCustomer;
 
     @Column(nullable = false)
@@ -40,12 +40,12 @@ public class Order implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "orders.payment_method")
+    @Column(name = "payment_method", nullable = false, columnDefinition = "orders.payment_method")
     private PaymentMethod paymentMethod;
 
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "order_code", nullable = false)
     private String orderCode;
 
     @Enumerated(EnumType.STRING)
@@ -56,16 +56,19 @@ public class Order implements Serializable {
     @Column(nullable = false)
     private Integer total;
 
+    @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     List<ProductOrder> products;
 
-    @ElementCollection
-    @CollectionTable(name = "discount_order", schema = "orders", joinColumns = @JoinColumn(name = "id_order"))
-    List<Integer> discount;
+    // Comentado temporalmente - puede causar errores si la tabla no existe
+    // @ElementCollection
+    // @CollectionTable(name = "discount_order", schema = "orders", joinColumns = @JoinColumn(name = "id_order"))
+    // List<Integer> discount;
 }

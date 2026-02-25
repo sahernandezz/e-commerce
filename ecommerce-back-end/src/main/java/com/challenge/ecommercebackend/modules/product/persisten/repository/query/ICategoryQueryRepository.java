@@ -12,26 +12,21 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositorio de LECTURA (Query) para categorías.
- * Usa la vista materializada catalog.category_view que ya filtra por status ACTIVE.
- */
 @Repository
 public interface ICategoryQueryRepository extends JpaRepository<Category, Long> {
 
-    /**
-     * Obtiene todas las categorías activas.
-     */
-    @Query(value = "SELECT * FROM catalog.category_view", nativeQuery = true)
+    @Query("SELECT c FROM Category c WHERE c.status = 'ACTIVE' ORDER BY c.name")
     List<Category> findAllActive();
 
-    /**
-     * Obtiene una categoría por ID.
-     */
-    @Query(value = "SELECT * FROM catalog.category_view WHERE id = :id", nativeQuery = true)
+    @Query("SELECT c FROM Category c WHERE c.id = :id AND c.status = 'ACTIVE'")
     Optional<Category> findActiveById(@Param("id") Long id);
 
-    // Admin methods
     Page<Category> findByStatus(CategoryStatus status, Pageable pageable);
+
+    Page<Category> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<Category> findByStatusAndNameContainingIgnoreCase(CategoryStatus status, String name, Pageable pageable);
+
+    Optional<Category> findByName(String name);
 }
 

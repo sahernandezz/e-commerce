@@ -10,6 +10,8 @@ import com.challenge.ecommercebackend.modules.user.persisten.entity.User;
 import com.challenge.ecommercebackend.modules.user.persisten.entity.UserStatus;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IRoleCommandRepository;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IUserCommandRepository;
+import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IRoleQueryRepository;
+import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IUserQueryRepository;
 import com.challenge.ecommercebackend.modules.user.web.dto.request.AuthRequest;
 import com.challenge.ecommercebackend.modules.user.web.dto.request.RegisterInput;
 import com.challenge.ecommercebackend.modules.user.web.dto.response.AuthenticationResponse;
@@ -33,7 +35,8 @@ import java.util.stream.IntStream;
 public class AuthenticationServiceImpl implements IAuthenticationService {
 
     private final IUserCommandRepository userCommandRepository;
-    private final IRoleCommandRepository roleCommandRepository;
+    private final IUserQueryRepository userQueryRepository;
+    private final IRoleQueryRepository roleQueryRepository;
     private final JwtUtils jwtUtils;
     private final IEmailSenderService mailService;
     private final PasswordEncoder passwordEncoder;
@@ -46,14 +49,15 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
     private Integer time;
 
     public AuthenticationServiceImpl(
-            IUserCommandRepository userCommandRepository,
-            IRoleCommandRepository roleCommandRepository,
+            IUserCommandRepository userCommandRepository, IUserQueryRepository userQueryRepository,
+            IRoleQueryRepository roleQueryRepository,
             JwtUtils jwtUtils,
             IEmailSenderService mailService,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager) {
         this.userCommandRepository = userCommandRepository;
-        this.roleCommandRepository = roleCommandRepository;
+        this.userQueryRepository = userQueryRepository;
+        this.roleQueryRepository = roleQueryRepository;
         this.jwtUtils = jwtUtils;
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
@@ -66,7 +70,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         try {
             // Normalizar email a minúsculas
             String normalizedEmail = request.getEmail().toLowerCase().trim();
-            Optional<User> user = userCommandRepository.findByEmail(normalizedEmail);
+            Optional<User> user = userQueryRepository.findByEmail(normalizedEmail);
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword()));
 
@@ -92,12 +96,12 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         String normalizedEmail = request.getEmail().toLowerCase().trim();
 
         // Verificar si el email ya existe
-        if (userCommandRepository.findByEmail(normalizedEmail).isPresent()) {
+        if (userQueryRepository.findByEmail(normalizedEmail).isPresent()) {
             throw new RuntimeException("El email ya está registrado");
         }
 
         // Obtener el rol USER por defecto
-        Role userRole = roleCommandRepository.findByName(RoleName.USER.getCode())
+        Role userRole = roleQueryRepository.findByName(RoleName.USER.getCode())
                 .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
 
         // Crear el nuevo usuario con email normalizado
@@ -124,7 +128,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
     public String recoverPassword(String correo, HttpServletRequest request) {
         // Normalizar email a minúsculas
         String normalizedEmail = correo.toLowerCase().trim();
-        Optional<User> user = userCommandRepository.findByEmail(normalizedEmail);
+        Optional<User> user = userQueryRepository.findByEmail(normalizedEmail);
         if (user.isPresent() && user.get().isEnabled()) {
             sendRecoveryCode(user.get(), request);
         }
@@ -133,7 +137,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
     public Optional<User> verificateRecoveryCode(String recoveryCode, Long id) {
         Optional<User> result = Optional.empty();
-        Optional<User> user = userCommandRepository.findById(id);
+        Optional<User> user = userQueryRepository.findById(id);
         if (user.isPresent() && user.get().isEnabled() && user.get().getRecoveryDate() != null
                 && user.get().getRecoveryCode() != null) {
             if (passwordEncoder.matches(recoveryCode, user.get().getRecoveryCode())

@@ -1,12 +1,14 @@
 'use client'
 
-import {useEffect, useState} from "react";
+import {Suspense, useEffect, useState} from "react";
+import {useSearchParams} from "next/navigation";
 import {getAllProductsActive} from "@/lib/graphql/query";
 import {Product} from "@/lib/types";
 import {Card} from "@/components/card";
 
-export default function SearchPage() {
-
+function SearchContent() {
+    const searchParams = useSearchParams();
+    const sort = searchParams.get('sort');
     const [items, setItems] = useState<Product[]>([]);
 
     useEffect(() => {
@@ -22,12 +24,29 @@ export default function SearchPage() {
         getItems();
     }, []);
 
+    // Ordenar productos según el parámetro sort
+    const sortedItems = [...items].sort((a, b) => {
+        if (sort === 'price-asc') {
+            return a.price - b.price;
+        } else if (sort === 'price-desc') {
+            return b.price - a.price;
+        }
+        return 0; // Sin ordenamiento específico
+    });
+
     return (
         <>
             {
-                items.map((item: Product) => <Card key={item.id} product={item}/>)
+                sortedItems.map((item: Product) => <Card key={item.id} product={item}/>)
             }
         </>
     );
+}
 
+export default function SearchPage() {
+    return (
+        <Suspense fallback={<div className="col-span-full flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+            <SearchContent />
+        </Suspense>
+    );
 }

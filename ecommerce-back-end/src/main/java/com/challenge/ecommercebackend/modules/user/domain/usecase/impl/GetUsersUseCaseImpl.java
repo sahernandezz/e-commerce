@@ -1,9 +1,9 @@
 package com.challenge.ecommercebackend.modules.user.domain.usecase.impl;
 
+import com.challenge.ecommercebackend.config.cqrs.QueryTransactional;
 import com.challenge.ecommercebackend.modules.user.domain.usecase.GetUsersUseCase;
 import com.challenge.ecommercebackend.modules.user.persisten.entity.User;
 import com.challenge.ecommercebackend.modules.user.persisten.entity.UserStatus;
-import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IUserCommandRepository;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IUserQueryRepository;
 import com.challenge.ecommercebackend.shared.domain.PageResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@QueryTransactional
 public class GetUsersUseCaseImpl implements GetUsersUseCase {
 
     private final IUserQueryRepository userQueryRepository;
-    private final IUserCommandRepository userCommandRepository;
 
     @Override
     public User getById(Long id) {
@@ -39,15 +39,15 @@ public class GetUsersUseCaseImpl implements GetUsersUseCase {
         Page<User> userPage;
 
         if (status != null && search != null) {
-            userPage = userCommandRepository.findByStatusAndNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            userPage = userQueryRepository.findByStatusAndNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
                     UserStatus.valueOf(status), search, search, pageable);
         } else if (status != null) {
-            userPage = userCommandRepository.findByStatus(UserStatus.valueOf(status), pageable);
+            userPage = userQueryRepository.findByStatus(UserStatus.valueOf(status), pageable);
         } else if (search != null) {
-            userPage = userCommandRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            userPage = userQueryRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
                     search, search, pageable);
         } else {
-            userPage = userCommandRepository.findAll(pageable);
+            userPage = userQueryRepository.findAll(pageable);
         }
 
         return PageResponse.<User>builder()

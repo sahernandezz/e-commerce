@@ -1,9 +1,9 @@
 package com.challenge.ecommercebackend.modules.product.web.controller;
 
-import com.challenge.ecommercebackend.modules.product.domain.usecase.GetCategoriesUseCase;
-import com.challenge.ecommercebackend.modules.product.domain.usecase.GetProductsUseCase;
-import com.challenge.ecommercebackend.modules.product.persisten.entity.Category;
-import com.challenge.ecommercebackend.modules.product.persisten.entity.Product;
+import com.challenge.ecommercebackend.modules.product.domain.service.IProductService;
+import com.challenge.ecommercebackend.modules.product.web.dto.response.CategoryResponse;
+import com.challenge.ecommercebackend.modules.product.web.dto.response.ProductResponse;
+import com.challenge.ecommercebackend.modules.product.web.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -19,31 +19,31 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final GetProductsUseCase getProductsUseCase;
-    private final GetCategoriesUseCase getCategoriesUseCase;
+    private final IProductService productService;
+    private final ProductMapper productMapper;
 
     @QueryMapping("getAllProductsActive")
-    public List<Product> getAllProductsActive() {
-        return getProductsUseCase.getAllActive();
+    public List<ProductResponse> getAllProductsActive() {
+        return productMapper.toResponseList(productService.getGetProductsUseCase().getAllActive());
     }
 
     @QueryMapping("getAllProductsActiveByCategoryId")
-    public List<Product> getAllProductsActiveByCategoryId(@Argument("categoryId") String categoryId) {
-        return getProductsUseCase.getActiveByCategoryId(Long.parseLong(categoryId));
+    public List<ProductResponse> getAllProductsActiveByCategoryId(@Argument("categoryId") String categoryId) {
+        return productMapper.toResponseList(productService.getGetProductsUseCase().getActiveByCategoryId(Long.parseLong(categoryId)));
     }
 
     @QueryMapping("getProductById")
-    public Product getProductById(@Argument("id") String id) {
-        return getProductsUseCase.getById(Long.parseLong(id));
+    public ProductResponse getProductById(@Argument("id") String id) {
+        return productMapper.toResponse(productService.getGetProductsUseCase().getById(Long.parseLong(id)));
     }
 
     @QueryMapping("getAllProductsActiveByName")
-    public List<Product> getAllProductsActiveByName(@Argument("name") String name) {
-        return getProductsUseCase.getActiveByName(name);
+    public List<ProductResponse> getAllProductsActiveByName(@Argument("name") String name) {
+        return productMapper.toResponseList(productService.getGetProductsUseCase().getActiveByName(name));
     }
 
     @QueryMapping("getAllCategoriesActive")
-    public List<Category> getAllCategoriesActive() {
-        return getCategoriesUseCase.getAllActive();
+    public List<CategoryResponse> getAllCategoriesActive() {
+        return productMapper.toCategoryResponseList(productService.getGetCategoriesUseCase().getAllActive());
     }
 }

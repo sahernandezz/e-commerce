@@ -1,6 +1,5 @@
 package com.challenge.ecommercebackend.modules.product.web.dto.response;
 
-import com.challenge.ecommercebackend.modules.product.persisten.entity.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +17,9 @@ public class ProductResponse {
     private String name;
     private String description;
     private Integer price;
-    private ProductStatus status;
-    private Long categoryId;
-    private String categoryName;
+    private Integer discount;
+    private String status;
+    private CategoryResponse category;
     private List<String> imagesUrl;
     private List<String> colors;
     private List<String> sizes;

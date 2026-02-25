@@ -34,4 +34,5 @@ export type ProductAddCart = {
 export type Category = {
     id: number;
     name: string;
+    status?: string;
 }

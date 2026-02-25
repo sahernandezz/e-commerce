@@ -4,6 +4,7 @@ import com.challenge.ecommercebackend.modules.product.domain.usecase.DeleteProdu
 import com.challenge.ecommercebackend.modules.product.persisten.entity.Product;
 import com.challenge.ecommercebackend.modules.product.persisten.entity.ProductStatus;
 import com.challenge.ecommercebackend.modules.product.persisten.repository.command.IProductCommandRepository;
+import com.challenge.ecommercebackend.modules.product.persisten.repository.query.IProductQueryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,13 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class DeleteProductUseCaseImpl implements DeleteProductUseCase {
 
+    private final IProductQueryRepository productQueryRepository;
     private final IProductCommandRepository productCommandRepository;
 
     @Override
     @Transactional
     public void execute(Long id) {
-        Product product = productCommandRepository.findById(id)
+        Product product = productQueryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
         product.setStatus(ProductStatus.INACTIVE);

@@ -58,21 +58,18 @@ const GET_ALL_CATEGORIES_ACTIVE = gql`
     query {
         getAllCategoriesActive {
             id,
-            name
+            name,
+            status
         }
     }
     `;
-let categoriesCache: { id: string, name: string }[] | null = null;
 
 export const getAllCategoriesActive = async () => {
-    if (categoriesCache) {
-        return categoriesCache;
-    }
-
     try {
         const data: any = await getClient().request(GET_ALL_CATEGORIES_ACTIVE);
-        categoriesCache = data.getAllCategoriesActive;
-        return categoriesCache;
+        // Filtrar solo categorías activas (doble verificación)
+        const categories = data.getAllCategoriesActive || [];
+        return categories.filter((cat: any) => cat.status === 'ACTIVE');
     } catch (error) {
         console.error('Error fetching categories:', error);
         throw error;
@@ -195,3 +192,110 @@ export const getMyOrders = async (): Promise<UserOrder[]> => {
         return [];
     }
 };
+
+// Payment Methods
+export interface PaymentMethodOption {
+    value: string;
+    label: string;
+}
+
+const GET_PAYMENT_METHODS = gql`
+    query {
+        getPaymentMethods {
+            value
+            label
+        }
+    }
+`;
+
+export const getPaymentMethods = async (): Promise<PaymentMethodOption[]> => {
+    try {
+        const data: any = await getClient().request(GET_PAYMENT_METHODS);
+        return data.getPaymentMethods || [];
+    } catch (error) {
+        console.error('Error fetching payment methods:', error);
+        // Fallback en caso de error (debe coincidir con PaymentMethod.java)
+        return [
+            { value: 'CASH', label: 'Efectivo' },
+            { value: 'CREDIT_CARD', label: 'Tarjeta de crédito' },
+            { value: 'DEBIT_CARD', label: 'Tarjeta de débito' },
+            { value: 'PAYPAL', label: 'PayPal' },
+            { value: 'TRANSFER', label: 'Transferencia' }
+        ];
+    }
+};
+
+// Homepage Config
+export interface HomepageConfigProduct {
+    id: string;
+    name: string;
+    price: number;
+    imagesUrl?: string[];
+}
+
+export interface HomepageConfig {
+    id: string;
+    featuredProductMain?: HomepageConfigProduct;
+    featuredProductSecondary1?: HomepageConfigProduct;
+    featuredProductSecondary2?: HomepageConfigProduct;
+    carouselProducts?: HomepageConfigProduct[];
+    showCarousel?: boolean;
+    carouselTitle?: string;
+    bannerTitle?: string;
+    bannerSubtitle?: string;
+    bannerImageUrl?: string;
+    bannerLink?: string;
+    bannerEnabled?: boolean;
+    updatedAt?: string;
+}
+
+const GET_HOMEPAGE_CONFIG = gql`
+    query getHomepageConfig {
+        getHomepageConfig {
+            id
+            featuredProductMain {
+                id
+                name
+                price
+                imagesUrl
+            }
+            featuredProductSecondary1 {
+                id
+                name
+                price
+                imagesUrl
+            }
+            featuredProductSecondary2 {
+                id
+                name
+                price
+                imagesUrl
+            }
+            carouselProducts {
+                id
+                name
+                price
+                imagesUrl
+            }
+            showCarousel
+            carouselTitle
+            bannerTitle
+            bannerSubtitle
+            bannerImageUrl
+            bannerLink
+            bannerEnabled
+            updatedAt
+        }
+    }
+`;
+
+export const getHomepageConfig = async (): Promise<HomepageConfig | null> => {
+    try {
+        const data: any = await getClient().request(GET_HOMEPAGE_CONFIG);
+        return data.getHomepageConfig;
+    } catch (error) {
+        console.error('Error fetching homepage config:', error);
+        return null;
+    }
+};
+

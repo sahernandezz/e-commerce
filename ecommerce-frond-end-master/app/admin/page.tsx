@@ -12,6 +12,7 @@ import {
     setAuthToken
 } from '@/lib/graphql/admin';
 import { currencyFormatter as formatCurrency } from '@/lib/currencyFormatter';
+import { getOrderStatusLabel } from '@/lib/status';
 
 export default function AdminDashboard() {
     const { token } = useAuth();
@@ -245,11 +246,11 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="py-3">
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                {order.status}
+                                                {getOrderStatusLabel(order.status)}
                                             </span>
                                         </td>
                                         <td className="py-3 text-neutral-500 dark:text-neutral-400">
-                                            {new Date(order.createdAt).toLocaleDateString()}
+                                            {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}
                                         </td>
                                     </tr>
                                 )) : (

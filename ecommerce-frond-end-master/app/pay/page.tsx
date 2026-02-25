@@ -4,6 +4,7 @@ import {useEffect, useState} from 'react';
 import {useCart} from '@/context/cart';
 import {useAuth} from '@/context/auth';
 import {createOrder} from "@/lib/graphql/mutation";
+import {getPaymentMethods, PaymentMethodOption} from "@/lib/graphql/query";
 import {OrderInput, ProductInput} from "@/lib/types";
 import {currencyFormatter} from "@/lib/currencyFormatter";
 
@@ -16,9 +17,22 @@ export default function PayPage() {
     const [address, setAddress] = useState('');
     const [city, setCity] = useState('');
     const [description, setDescription] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('CASH');
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isEmailFromUser, setIsEmailFromUser] = useState(false);
+
+    // Cargar métodos de pago desde el backend
+    useEffect(() => {
+        const loadPaymentMethods = async () => {
+            const methods = await getPaymentMethods();
+            setPaymentMethods(methods);
+            if (methods.length > 0 && !paymentMethod) {
+                setPaymentMethod(methods[0].value);
+            }
+        };
+        loadPaymentMethods();
+    }, []);
 
     // Cargar el email del usuario si está logueado
     useEffect(() => {
@@ -176,10 +190,11 @@ export default function PayPage() {
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 className="w-full p-2 mt-2  border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white"
                             >
-                                <option value="CASH">Efectivo</option>
-                                <option value="CREDIT_CARD">Tarjeta de Crédito</option>
-                                <option value="DEBIT_CARD">Tarjeta de Débito</option>
-                                <option value="PAYPAL">PayPal</option>
+                                {paymentMethods.map((method) => (
+                                    <option key={method.value} value={method.value}>
+                                        {method.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <button

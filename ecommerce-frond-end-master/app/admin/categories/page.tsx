@@ -6,13 +6,14 @@ import {
     getCategoriesPaginated,
     createCategory,
     updateCategory,
-    deleteCategory,
+    updateCategoryStatus,
     getCategoryStatuses,
     setAuthToken,
     Category,
     PageResponse,
     StatusOption
 } from '@/lib/graphql/admin';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 export default function CategoriesPage() {
     const { token } = useAuth();
@@ -26,6 +27,9 @@ export default function CategoriesPage() {
     const [showModal, setShowModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState({ name: '' });
+    const [showToggleModal, setShowToggleModal] = useState(false);
+    const [togglingCategory, setTogglingCategory] = useState<Category | null>(null);
+    const [toggleLoading, setToggleLoading] = useState(false);
 
     useEffect(() => {
         if (token) {
@@ -93,12 +97,25 @@ export default function CategoriesPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('¿Estás seguro de eliminar esta categoría?')) {
-            const success = await deleteCategory(id);
+    const handleToggleStatus = (category: Category) => {
+        setTogglingCategory(category);
+        setShowToggleModal(true);
+    };
+
+    const confirmToggleStatus = async () => {
+        if (!togglingCategory) return;
+
+        setToggleLoading(true);
+        try {
+            const newStatus = togglingCategory.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+            const success = await updateCategoryStatus(togglingCategory.id, newStatus);
             if (success) {
                 fetchData();
             }
+        } finally {
+            setToggleLoading(false);
+            setShowToggleModal(false);
+            setTogglingCategory(null);
         }
     };
 
@@ -222,10 +239,10 @@ export default function CategoriesPage() {
                                         Editar
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(category.id)}
-                                        className="text-red-600 hover:text-red-700"
+                                        onClick={() => handleToggleStatus(category)}
+                                        className={category.status === 'ACTIVE' ? 'text-orange-600 hover:text-orange-700' : 'text-green-600 hover:text-green-700'}
                                     >
-                                        Eliminar
+                                        {category.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                                     </button>
                                 </td>
                             </tr>
@@ -305,6 +322,25 @@ export default function CategoriesPage() {
                     </div>
                 </div>
             )}
+
+            {/* Modal de confirmación de cambio de estado */}
+            <ConfirmModal
+                isOpen={showToggleModal}
+                onClose={() => {
+                    setShowToggleModal(false);
+                    setTogglingCategory(null);
+                }}
+                onConfirm={confirmToggleStatus}
+                title={togglingCategory?.status === 'ACTIVE' ? 'Desactivar categoría' : 'Activar categoría'}
+                message={togglingCategory?.status === 'ACTIVE'
+                    ? `¿Estás seguro de que deseas desactivar la categoría "${togglingCategory?.name}"?`
+                    : `¿Estás seguro de que deseas activar la categoría "${togglingCategory?.name}"?`
+                }
+                confirmText={togglingCategory?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+                cancelText="Cancelar"
+                variant={togglingCategory?.status === 'ACTIVE' ? 'warning' : 'info'}
+                loading={toggleLoading}
+            />
         </div>
     );
 }

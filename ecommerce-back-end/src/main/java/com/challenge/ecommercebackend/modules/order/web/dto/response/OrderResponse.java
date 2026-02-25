@@ -1,7 +1,5 @@
 package com.challenge.ecommercebackend.modules.order.web.dto.response;
 
-import com.challenge.ecommercebackend.modules.order.persisten.entity.OrderStatus;
-import com.challenge.ecommercebackend.modules.order.persisten.entity.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +19,8 @@ public class OrderResponse {
     private String address;
     private String city;
     private String description;
-    private PaymentMethod paymentMethod;
-    private OrderStatus status;
+    private String paymentMethod;
+    private String status;
     private Integer total;
     private Date createdAt;
     private Date updatedAt;

@@ -3,6 +3,7 @@ package com.challenge.ecommercebackend.api;
 import com.challenge.ecommercebackend.modules.order.persisten.entity.Order;
 import com.challenge.ecommercebackend.modules.order.persisten.entity.OrderStatus;
 import com.challenge.ecommercebackend.modules.order.persisten.repository.query.IOrderQueryRepository;
+import com.challenge.ecommercebackend.modules.order.persisten.repository.query.projection.RecentOrderProjection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -57,9 +58,9 @@ public class OrderExternalApiImpl implements IOrderExternalApi {
 
     @Override
     public List<Map<String, Object>> getRecentOrders(int limit) {
-        List<Order> orders = orderQueryRepository.findAllByOrderByCreatedAtDesc(
-                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"))
-        ).getContent();
+        List<RecentOrderProjection> orders = orderQueryRepository.findRecentOrdersProjection(
+                PageRequest.of(0, limit)
+        );
 
         return orders.stream()
                 .map(order -> {

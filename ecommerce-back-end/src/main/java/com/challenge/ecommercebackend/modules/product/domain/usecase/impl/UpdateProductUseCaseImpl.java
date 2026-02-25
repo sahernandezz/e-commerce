@@ -5,6 +5,7 @@ import com.challenge.ecommercebackend.modules.product.persisten.entity.Category;
 import com.challenge.ecommercebackend.modules.product.persisten.entity.Product;
 import com.challenge.ecommercebackend.modules.product.persisten.repository.command.IProductCommandRepository;
 import com.challenge.ecommercebackend.modules.product.persisten.repository.query.ICategoryQueryRepository;
+import com.challenge.ecommercebackend.modules.product.persisten.repository.query.IProductQueryRepository;
 import com.challenge.ecommercebackend.modules.product.web.dto.request.InputProductRequest;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -17,13 +18,14 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
 
+    private final IProductQueryRepository productQueryRepository;
     private final IProductCommandRepository productCommandRepository;
     private final ICategoryQueryRepository categoryQueryRepository;
 
     @Override
     @Transactional
     public Product execute(Long id, InputProductRequest request) {
-        Product product = productCommandRepository.findById(id)
+        Product product = productQueryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
         if (request.getCategoryId() != null) {
@@ -44,4 +46,3 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
         return productCommandRepository.save(product);
     }
 }
-

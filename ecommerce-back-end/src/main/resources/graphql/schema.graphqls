@@ -11,7 +11,7 @@ type Query {
     getAllCategoriesActive: [Category]
 
     # User queries
-    getMyOrders: [Order]
+    getMyOrders: [OrderResponse]
 
     # Admin queries - Paginadas
     getDashboardStats: DashboardStats
@@ -20,7 +20,7 @@ type Query {
     getOrdersPaginated(page: Int!, size: Int!, status: String, customerEmail: String): OrderPage
     getUsersPaginated(page: Int!, size: Int!, status: String, search: String): UserPage
     getTopSellingProducts(limit: Int): [TopSellingProduct]
-    getRecentOrders(limit: Int): [Order]
+    getRecentOrders(limit: Int): [OrderResponse]
 
     # Enum values for frontend
     getProductStatuses: [StatusOption]
@@ -28,25 +28,33 @@ type Query {
     getOrderStatuses: [StatusOption]
     getUserStatuses: [StatusOption]
     getPaymentMethods: [StatusOption]
+
+    # Homepage config
+    getHomepageConfig: HomepageConfig
 }
 
 type Mutation {
     # Products
     addProduct(input: InputProductRequest): Product
     updateProduct(id: ID!, input: InputProductRequest): Product
+    updateProductStatus(id: ID!, status: String!): Product
     deleteProduct(id: ID!): Boolean
 
     # Categories
     createCategory(input: InputCategoryRequest): Category
     updateCategory(id: ID!, input: InputCategoryRequest): Category
+    updateCategoryStatus(id: ID!, status: String!): Category
     deleteCategory(id: ID!): Boolean
 
     # Orders
     createOrder(input: InputOrderRequest!): String
-    updateOrderStatus(id: ID!, status: String!): Order
+    updateOrderStatus(id: ID!, status: String!): OrderResponse
 
     # Users
-    updateUserStatus(id: ID!, status: String!): User
+    updateUserStatus(id: ID!, status: String!): UserResponse
+
+    # Homepage config
+    updateHomepageConfig(input: HomepageConfigInput!): HomepageConfig
 
     # Auth
     login(input: LoginInput!): AuthResponse
@@ -82,7 +90,7 @@ type CategoryPage {
 }
 
 type OrderPage {
-    content: [Order]
+    content: [OrderResponse]
     page: Int!
     size: Int!
     totalElements: Int!
@@ -94,7 +102,7 @@ type OrderPage {
 }
 
 type UserPage {
-    content: [User]
+    content: [UserResponse]
     page: Int!
     size: Int!
     totalElements: Int!
@@ -136,6 +144,8 @@ type UserResponse {
     email: String!
     name: String
     role: String
+    status: String
+    createdAt: String
 }
 
 # =============================================
@@ -197,16 +207,53 @@ type Order {
     products: [OrderProduct]
 }
 
+type OrderResponse {
+    id: ID!
+    orderCode: String!
+    emailCustomer: String!
+    address: String!
+    city: String!
+    description: String
+    paymentMethod: String
+    status: String
+    total: Int
+    createdAt: String
+    updatedAt: String
+    products: [OrderProductResponse]
+}
+
 type OrderProduct {
     id: ID!
     quantity: Int!
     unitPrice: Int!
+    price: Int!
     total: Int!
     name: String
-    idProduct: ID
+    productId: ID
     size: String
     color: String
     discount: Int
+    product: OrderProductInfo
+}
+
+type OrderProductResponse {
+    id: ID!
+    quantity: Int!
+    unitPrice: Int
+    price: Int
+    total: Int
+    name: String
+    productId: ID
+    size: String
+    color: String
+    discount: Int
+    product: OrderProductInfo
+}
+
+type OrderProductInfo {
+    id: ID!
+    name: String
+    imagesUrl: [String]
 }
 
 input InputOrderProductRequest {
@@ -238,6 +285,7 @@ type User {
     createdAt: String
 }
 
+
 # =============================================
 # Dashboard Types
 # =============================================
@@ -258,3 +306,38 @@ type TopSellingProduct {
     totalSold: Int!
     revenue: Float!
 }
+
+# =============================================
+# Homepage Config Types
+# =============================================
+
+type HomepageConfig {
+    id: ID!
+    featuredProductMain: Product
+    featuredProductSecondary1: Product
+    featuredProductSecondary2: Product
+    carouselProducts: [Product]
+    showCarousel: Boolean
+    carouselTitle: String
+    bannerTitle: String
+    bannerSubtitle: String
+    bannerImageUrl: String
+    bannerLink: String
+    bannerEnabled: Boolean
+    updatedAt: String
+}
+
+input HomepageConfigInput {
+    featuredProductMainId: ID
+    featuredProductSecondary1Id: ID
+    featuredProductSecondary2Id: ID
+    carouselProductIds: [ID]
+    showCarousel: Boolean
+    carouselTitle: String
+    bannerTitle: String
+    bannerSubtitle: String
+    bannerImageUrl: String
+    bannerLink: String
+    bannerEnabled: Boolean
+}
+

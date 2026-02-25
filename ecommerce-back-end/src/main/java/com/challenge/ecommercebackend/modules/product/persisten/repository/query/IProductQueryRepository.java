@@ -12,46 +12,55 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositorio de LECTURA (Query) para productos.
- * Usa la vista materializada catalog.product_view que ya filtra por status ACTIVE.
- * NO incluir filtros por estado ya que la vista ya lo hace.
- */
 @Repository
 public interface IProductQueryRepository extends JpaRepository<Product, Long> {
 
-    /**
-     * Obtiene todos los productos activos.
-     */
-    @Query(value = "SELECT * FROM catalog.product_view", nativeQuery = true)
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE p.status = 'ACTIVE' AND c.status = 'ACTIVE' " +
+           "ORDER BY p.createdAt DESC")
     List<Product> findAllActive();
 
-    /**
-     * Obtiene un producto por ID.
-     */
-    @Query(value = "SELECT * FROM catalog.product_view WHERE id = :id", nativeQuery = true)
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE p.id = :id AND p.status = 'ACTIVE' AND c.status = 'ACTIVE'")
     Optional<Product> findActiveById(@Param("id") Long id);
 
-    /**
-     * Obtiene productos por categoría.
-     */
-    @Query(value = "SELECT * FROM catalog.product_view WHERE category_id = :categoryId", nativeQuery = true)
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE p.category.id = :categoryId AND p.status = 'ACTIVE' AND c.status = 'ACTIVE' " +
+           "ORDER BY p.createdAt DESC")
     List<Product> findAllByCategoryId(@Param("categoryId") Long categoryId);
 
-    /**
-     * Busca productos por nombre (case insensitive).
-     */
-    @Query(value = "SELECT * FROM catalog.product_view WHERE LOWER(name) LIKE LOWER(CONCAT('%', :name, '%'))", nativeQuery = true)
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) " +
+           "AND p.status = 'ACTIVE' AND c.status = 'ACTIVE' " +
+           "ORDER BY p.createdAt DESC")
     List<Product> findAllByNameContainingIgnoreCase(@Param("name") String name);
 
-    // Admin methods - buscan en tabla directa, no en la vista
-    Page<Product> findByStatus(ProductStatus status, Pageable pageable);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE p.status = :status " +
+           "ORDER BY p.createdAt DESC")
+    Page<Product> findByStatus(@Param("status") ProductStatus status, Pageable pageable);
 
-    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) " +
+           "ORDER BY p.createdAt DESC")
+    Page<Product> findByNameContainingIgnoreCase(@Param("name") String name, Pageable pageable);
 
-    Page<Product> findByStatusAndNameContainingIgnoreCase(ProductStatus status, String name, Pageable pageable);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "WHERE p.status = :status " +
+           "AND LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) " +
+           "ORDER BY p.createdAt DESC")
+    Page<Product> findByStatusAndNameContainingIgnoreCase(@Param("status") ProductStatus status, @Param("name") String name, Pageable pageable);
 
-    // Count methods for dashboard
-    long countByStatus(ProductStatus status);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category c " +
+           "ORDER BY p.createdAt DESC")
+    Page<Product> findAll(Pageable pageable);
 }
 

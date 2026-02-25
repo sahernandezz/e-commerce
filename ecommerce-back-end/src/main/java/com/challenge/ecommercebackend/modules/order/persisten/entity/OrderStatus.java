@@ -6,6 +6,7 @@ package com.challenge.ecommercebackend.modules.order.persisten.entity;
  */
 public enum OrderStatus {
     PENDING("Pendiente"),
+    CONFIRMED("Confirmado"),
     PROCESSING("En proceso"),
     SHIPPED("Enviado"),
     DELIVERED("Entregado"),

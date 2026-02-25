@@ -9,8 +9,8 @@ import {
   setAuthToken
 } from '@/lib/graphql/admin';
 import { currencyFormatter as formatCurrency } from '@/lib/currencyFormatter';
-
-const ORDER_STATUSES = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+import { ORDER_STATUSES, getOrderStatusLabel, getPaymentMethodLabel } from '@/lib/status';
+import { RefreshIcon, EyeIcon, CloseIcon, PackageIcon, ClipboardIcon } from '@/components/icons';
 
 export default function AdminOrdersPage() {
   const { token } = useAuth();
@@ -57,11 +57,9 @@ export default function AdminOrdersPage() {
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'PENDING':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'PROCESSING':
+      case 'CONFIRMED':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'SHIPPED':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'CANCELLED':
+      case 'CANCELED':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
         return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200';
@@ -78,7 +76,7 @@ export default function AdminOrdersPage() {
   const stats = {
     total: orders.length,
     pending: orders.filter(o => o.status === 'PENDING').length,
-    processing: orders.filter(o => o.status === 'PROCESSING').length,
+    confirmed: orders.filter(o => o.status === 'CONFIRMED').length,
     delivered: orders.filter(o => o.status === 'DELIVERED').length,
   };
 
@@ -104,7 +102,7 @@ export default function AdminOrdersPage() {
           onClick={fetchOrders}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
         >
-          <span>🔄</span>
+          <RefreshIcon className="w-4 h-4" />
           Actualizar
         </button>
       </div>
@@ -120,8 +118,8 @@ export default function AdminOrdersPage() {
           <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300 mt-1">{stats.pending}</p>
         </div>
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow p-6">
-          <p className="text-sm text-blue-600 dark:text-blue-400">En Proceso</p>
-          <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.processing}</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400">Confirmadas</p>
+          <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.confirmed}</p>
         </div>
         <div className="bg-green-50 dark:bg-green-900/20 rounded-lg shadow p-6">
           <p className="text-sm text-green-600 dark:text-green-400">Entregadas</p>
@@ -155,7 +153,7 @@ export default function AdminOrdersPage() {
             >
               <option value="">Todos</option>
               {ORDER_STATUSES.map(status => (
-                <option key={status} value={status}>{status}</option>
+                <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </select>
           </div>
@@ -222,13 +220,13 @@ export default function AdminOrdersPage() {
                       className={`px-3 py-1 rounded-full text-xs font-medium border-0 cursor-pointer ${getStatusColor(order.status)}`}
                     >
                       {ORDER_STATUSES.map(status => (
-                        <option key={status} value={status}>{status}</option>
+                        <option key={status.value} value={status.value}>{status.label}</option>
                       ))}
                     </select>
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-neutral-500 dark:text-neutral-400">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}
                     </p>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -237,7 +235,7 @@ export default function AdminOrdersPage() {
                       className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition"
                       title="Ver detalles"
                     >
-                      👁️
+                      <EyeIcon className="w-5 h-5" />
                     </button>
                   </td>
                 </tr>
@@ -247,7 +245,9 @@ export default function AdminOrdersPage() {
 
           {filteredOrders.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-4xl mb-4">📋</p>
+              <div className="flex justify-center mb-4">
+                <ClipboardIcon className="w-12 h-12 text-neutral-400" />
+              </div>
               <p className="text-neutral-500 dark:text-neutral-400">No se encontraron órdenes</p>
             </div>
           )}
@@ -266,7 +266,7 @@ export default function AdminOrdersPage() {
                 onClick={() => setSelectedOrder(null)}
                 className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
               >
-                ✕
+                <CloseIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-6">
@@ -279,7 +279,7 @@ export default function AdminOrdersPage() {
                 <div>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Estado</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
-                    {selectedOrder.status}
+                    {getOrderStatusLabel(selectedOrder.status)}
                   </span>
                 </div>
                 <div>
@@ -288,7 +288,7 @@ export default function AdminOrdersPage() {
                 </div>
                 <div>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Método de Pago</p>
-                  <p className="font-medium text-black dark:text-white">{selectedOrder.paymentMethod}</p>
+                  <p className="font-medium text-black dark:text-white">{getPaymentMethodLabel(selectedOrder.paymentMethod)}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Dirección</p>
@@ -309,8 +309,8 @@ export default function AdminOrdersPage() {
                   <div className="space-y-3">
                     {selectedOrder.products.map((item) => (
                       <div key={item.id} className="flex items-center gap-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-                        <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-600 rounded-lg flex items-center justify-center">
-                          📦
+                        <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-600 rounded-lg flex items-center justify-center text-neutral-500">
+                          <PackageIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-black dark:text-white">

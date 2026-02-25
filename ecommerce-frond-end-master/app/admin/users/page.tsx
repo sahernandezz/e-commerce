@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth';
 import {
-  getAllUsers,
+  getUsersPaginated,
   updateUserStatus,
   AdminUser,
+  PageResponse,
   setAuthToken
 } from '@/lib/graphql/admin';
 import { getRoleDisplayName } from '@/lib/roles';
-
-const USER_STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+import { USER_STATUSES, getUserStatusLabel } from '@/lib/status';
+import { RefreshIcon, EyeIcon, CloseIcon, UsersIcon } from '@/components/icons';
 
 export default function AdminUsersPage() {
   const { token } = useAuth();
@@ -31,8 +32,8 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await getAllUsers();
-      setUsers(data);
+      const data = await getUsersPaginated(0, 100);
+      setUsers(data.content);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -55,8 +56,6 @@ export default function AdminUsersPage() {
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'INACTIVE':
         return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200';
-      case 'SUSPENDED':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
         return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200';
     }
@@ -110,7 +109,7 @@ export default function AdminUsersPage() {
           onClick={fetchUsers}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
         >
-          <span>🔄</span>
+          <RefreshIcon className="w-4 h-4" />
           Actualizar
         </button>
       </div>
@@ -175,7 +174,7 @@ export default function AdminUsersPage() {
             >
               <option value="">Todos</option>
               {USER_STATUSES.map(status => (
-                <option key={status} value={status}>{status}</option>
+                <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </select>
           </div>
@@ -243,7 +242,7 @@ export default function AdminUsersPage() {
                       className={`px-3 py-1 rounded-full text-xs font-medium border-0 cursor-pointer ${getStatusColor(user.status)}`}
                     >
                       {USER_STATUSES.map(status => (
-                        <option key={status} value={status}>{status}</option>
+                        <option key={status.value} value={status.value}>{status.label}</option>
                       ))}
                     </select>
                   </td>
@@ -258,7 +257,7 @@ export default function AdminUsersPage() {
                       className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition"
                       title="Ver detalles"
                     >
-                      👁️
+                      <EyeIcon className="w-5 h-5" />
                     </button>
                   </td>
                 </tr>
@@ -268,7 +267,9 @@ export default function AdminUsersPage() {
 
           {filteredUsers.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-4xl mb-4">👥</p>
+              <div className="flex justify-center mb-4">
+                <UsersIcon className="w-12 h-12 text-neutral-400" />
+              </div>
               <p className="text-neutral-500 dark:text-neutral-400">No se encontraron usuarios</p>
             </div>
           )}
@@ -287,7 +288,7 @@ export default function AdminUsersPage() {
                 onClick={() => setSelectedUser(null)}
                 className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
               >
-                ✕
+                <CloseIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-6">
@@ -317,7 +318,7 @@ export default function AdminUsersPage() {
                 <div>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Estado</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedUser.status)}`}>
-                    {selectedUser.status}
+                    {getUserStatusLabel(selectedUser.status)}
                   </span>
                 </div>
                 <div>

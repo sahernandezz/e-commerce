@@ -346,6 +346,24 @@ const UPDATE_USER_STATUS = gql`
     }
 `;
 
+const UPDATE_PRODUCT_STATUS = gql`
+    mutation updateProductStatus($id: ID!, $status: String!) {
+        updateProductStatus(id: $id, status: $status) {
+            id
+            status
+        }
+    }
+`;
+
+const UPDATE_CATEGORY_STATUS = gql`
+    mutation updateCategoryStatus($id: ID!, $status: String!) {
+        updateCategoryStatus(id: $id, status: $status) {
+            id
+            status
+        }
+    }
+`;
+
 const CREATE_PRODUCT = gql`
     mutation addProduct($input: InputProductRequest!) {
         addProduct(input: $input) {
@@ -450,6 +468,16 @@ export const updateProduct = async (id: string, input: any): Promise<boolean> =>
     }
 };
 
+export const updateProductStatus = async (id: string, status: string): Promise<boolean> => {
+    try {
+        await getClient().request(UPDATE_PRODUCT_STATUS, { id, status });
+        return true;
+    } catch (error) {
+        console.error('Error updating product status:', error);
+        return false;
+    }
+};
+
 export const deleteProduct = async (id: string): Promise<boolean> => {
     try {
         await getClient().request(DELETE_PRODUCT, { id });
@@ -501,6 +529,16 @@ export const updateCategory = async (id: string, input: { name: string }): Promi
     }
 };
 
+export const updateCategoryStatus = async (id: string, status: string): Promise<boolean> => {
+    try {
+        await getClient().request(UPDATE_CATEGORY_STATUS, { id, status });
+        return true;
+    } catch (error) {
+        console.error('Error updating category status:', error);
+        return false;
+    }
+};
+
 export const deleteCategory = async (id: string): Promise<boolean> => {
     try {
         await getClient().request(DELETE_CATEGORY, { id });
@@ -525,6 +563,16 @@ export const getOrdersPaginated = async (
         customerEmail: customerEmail || null
     });
     return data.getOrdersPaginated;
+};
+
+export const getAllOrders = async (): Promise<Order[]> => {
+    try {
+        const response = await getOrdersPaginated(0, 1000);
+        return response?.content || [];
+    } catch (error) {
+        console.error('Error fetching all orders:', error);
+        return [];
+    }
 };
 
 export const updateOrderStatus = async (id: string, status: string): Promise<boolean> => {
@@ -583,3 +631,121 @@ export const getUserStatuses = async (): Promise<StatusOption[]> => {
     const data: any = await getClient().request(GET_USER_STATUSES);
     return data.getUserStatuses || [];
 };
+
+// =============================================
+// Homepage Config
+// =============================================
+
+export interface HomepageConfigProduct {
+    id: string;
+    name: string;
+    price: number;
+    imagesUrl?: string[];
+}
+
+export interface HomepageConfig {
+    id: string;
+    featuredProductMain?: HomepageConfigProduct;
+    featuredProductSecondary1?: HomepageConfigProduct;
+    featuredProductSecondary2?: HomepageConfigProduct;
+    carouselProducts?: HomepageConfigProduct[];
+    showCarousel?: boolean;
+    carouselTitle?: string;
+    bannerTitle?: string;
+    bannerSubtitle?: string;
+    bannerImageUrl?: string;
+    bannerLink?: string;
+    bannerEnabled?: boolean;
+    updatedAt?: string;
+}
+
+export interface HomepageConfigInput {
+    featuredProductMainId?: number;
+    featuredProductSecondary1Id?: number;
+    featuredProductSecondary2Id?: number;
+    carouselProductIds?: number[];
+    showCarousel?: boolean;
+    carouselTitle?: string;
+    bannerTitle?: string;
+    bannerSubtitle?: string;
+    bannerImageUrl?: string;
+    bannerLink?: string;
+    bannerEnabled?: boolean;
+}
+
+const GET_HOMEPAGE_CONFIG = gql`
+    query getHomepageConfig {
+        getHomepageConfig {
+            id
+            featuredProductMain {
+                id
+                name
+                price
+                imagesUrl
+            }
+            featuredProductSecondary1 {
+                id
+                name
+                price
+                imagesUrl
+            }
+            featuredProductSecondary2 {
+                id
+                name
+                price
+                imagesUrl
+            }
+            carouselProducts {
+                id
+                name
+                price
+                imagesUrl
+            }
+            showCarousel
+            carouselTitle
+            bannerTitle
+            bannerSubtitle
+            bannerImageUrl
+            bannerLink
+            bannerEnabled
+            updatedAt
+        }
+    }
+`;
+
+const UPDATE_HOMEPAGE_CONFIG = gql`
+    mutation updateHomepageConfig($input: HomepageConfigInput!) {
+        updateHomepageConfig(input: $input) {
+            id
+            showCarousel
+            carouselTitle
+            bannerTitle
+            bannerSubtitle
+            bannerImageUrl
+            bannerLink
+            bannerEnabled
+            updatedAt
+        }
+    }
+`;
+
+export const getHomepageConfig = async (): Promise<HomepageConfig | null> => {
+    try {
+        const data: any = await getClient().request(GET_HOMEPAGE_CONFIG);
+        return data.getHomepageConfig;
+    } catch (error) {
+        console.error('Error fetching homepage config:', error);
+        return null;
+    }
+};
+
+export const updateHomepageConfig = async (input: HomepageConfigInput): Promise<HomepageConfig | null> => {
+    try {
+        const data: any = await getClient().request(UPDATE_HOMEPAGE_CONFIG, { input });
+        return data.updateHomepageConfig;
+    } catch (error) {
+        console.error('Error updating homepage config:', error);
+        return null;
+    }
+};
+

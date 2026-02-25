@@ -36,8 +36,9 @@ public class Product implements Serializable {
     @Column(nullable = false, columnDefinition = "catalog.product_status")
     private ProductStatus status = ProductStatus.ACTIVE;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images_url", schema = "catalog", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "images_url")
     private List<String> imagesUrl;
 
     @Column(nullable = false)
@@ -57,11 +58,13 @@ public class Product implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_colors", schema = "catalog", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "colors")
     private List<String> colors;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_sizes", schema = "catalog", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "sizes")
     private List<String> sizes;
 }

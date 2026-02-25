@@ -3,7 +3,6 @@ package com.challenge.ecommercebackend.modules.product.domain.usecase.impl;
 import com.challenge.ecommercebackend.modules.product.domain.usecase.GetCategoriesUseCase;
 import com.challenge.ecommercebackend.modules.product.persisten.entity.Category;
 import com.challenge.ecommercebackend.modules.product.persisten.entity.CategoryStatus;
-import com.challenge.ecommercebackend.modules.product.persisten.repository.command.ICategoryCommandRepository;
 import com.challenge.ecommercebackend.modules.product.persisten.repository.query.ICategoryQueryRepository;
 import com.challenge.ecommercebackend.shared.domain.PageResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,33 +21,35 @@ import java.util.List;
 public class GetCategoriesUseCaseImpl implements GetCategoriesUseCase {
 
     private final ICategoryQueryRepository categoryQueryRepository;
-    private final ICategoryCommandRepository categoryCommandRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<Category> getAllActive() {
         return categoryQueryRepository.findAllActive();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Category getById(Long id) {
         return categoryQueryRepository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<Category> getAllPaginated(int page, int size, String status, String search) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         Page<Category> categoryPage;
 
         if (status != null && search != null) {
-            categoryPage = categoryCommandRepository.findByStatusAndNameContainingIgnoreCase(
+            categoryPage = categoryQueryRepository.findByStatusAndNameContainingIgnoreCase(
                     CategoryStatus.valueOf(status), search, pageable);
         } else if (status != null) {
-            categoryPage = categoryCommandRepository.findByStatus(CategoryStatus.valueOf(status), pageable);
+            categoryPage = categoryQueryRepository.findByStatus(CategoryStatus.valueOf(status), pageable);
         } else if (search != null) {
-            categoryPage = categoryCommandRepository.findByNameContainingIgnoreCase(search, pageable);
+            categoryPage = categoryQueryRepository.findByNameContainingIgnoreCase(search, pageable);
         } else {
-            categoryPage = categoryCommandRepository.findAll(pageable);
+            categoryPage = categoryQueryRepository.findAll(pageable);
         }
 
         return PageResponse.<Category>builder()

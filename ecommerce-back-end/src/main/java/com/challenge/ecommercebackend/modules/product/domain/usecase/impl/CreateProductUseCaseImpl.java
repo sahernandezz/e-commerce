@@ -43,4 +43,3 @@ public class CreateProductUseCaseImpl implements CreateProductUseCase {
         return productCommandRepository.save(product);
     }
 }
-

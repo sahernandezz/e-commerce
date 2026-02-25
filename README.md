@@ -15,7 +15,7 @@ Para esta prueba se ha decidido implementar una **arquitectura de monolito modul
 - **Backend**: Spring Boot 3.4.1, Java 23
 - **Frontend**: Next.js 15.1, React 19
 - **API**: GraphQL
-- **Base de Datos**: PostgreSQL 16 (con CQRS)
+- **Base de Datos**: PostgreSQL 16 (con Replicación Streaming + CQRS)
 - **Cache/Tokens**: Redis 7
 - **CI/CD**: Jenkins
 - **Contenedores**: Docker & Docker Compose
@@ -27,59 +27,116 @@ Para esta prueba se ha decidido implementar una **arquitectura de monolito modul
 
 ---
 
+## REPLICACIÓN POSTGRESQL + CQRS
+
+Este proyecto implementa un sistema completo de **PostgreSQL Streaming Replication** integrado con **CQRS**:
+
+### Arquitectura de Replicación
+
+```
+Backend (CQRS)
+├── Command Repositories → PostgreSQL Master (Write + Read)  :5432
+└── Query Repositories   → PostgreSQL Replica (Read Only)    :5433
+                                    ↑
+                            Streaming Replication
+```
+
+### Características
+- ✅ **Master-Replica**: Replicación streaming en tiempo real
+- ✅ **CQRS**: Separación de escritura (Master) y lectura (Replica)
+- ✅ **Hot Standby**: La replica está siempre lista para ser promovida
+- ✅ **Alta Disponibilidad**: Tolerancia a fallos y escalabilidad
+- ✅ **Configuración Automática**: Scripts automatizados de setup
+
+### Inicio Rápido
+```bash
+# Test rápido de replicación (60 segundos)
+./test-replication-quick.sh
+
+# Verificación completa
+./verify-replication.sh
+
+# Ver documentación completa
+# - REPLICATION-SUMMARY.md    - Resumen completo
+# - REPLICATION-QUICKSTART.md - Comandos útiles
+# - database/README.md         - Documentación técnica
+```
+
+---
+
 ## ARQUITECTURA CQRS
 
-El sistema implementa **CQRS (Command Query Responsibility Segregation)** con las siguientes características:
+El sistema implementa **CQRS (Command Query Responsibility Segregation)** con **replicación PostgreSQL streaming** para garantizar sincronización automática en tiempo real.
 
-### Separación de DataSources
+### Separación de DataSources con Replicación Streaming
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Backend                               │
+│                    Backend Spring Boot                       │
 │  ┌─────────────────┐           ┌─────────────────┐          │
-│  │  Write Service  │           │  Read Service   │          │
-│  │  (Commands)     │           │  (Queries)      │          │
+│  │ Command Service │           │  Query Service  │          │
+│  │  (Escritura)    │           │   (Lectura)     │          │
 │  └────────┬────────┘           └────────┬────────┘          │
 │           │                             │                    │
 │           ▼                             ▼                    │
 │  ┌─────────────────┐           ┌─────────────────┐          │
 │  │ Write DataSource│           │ Read DataSource │          │
-│  │ (ecommerce_     │           │ (ecommerce_     │          │
-│  │  writer)        │           │  reader)        │          │
+│  │ (puerto 5432)   │           │ (puerto 5433)   │          │
 │  └────────┬────────┘           └────────┬────────┘          │
 └───────────┼─────────────────────────────┼────────────────────┘
             │                             │
             ▼                             ▼
 ┌─────────────────────┐         ┌─────────────────────┐
-│   PostgreSQL Master │         │ Vistas Materializadas│
-│   (Escritura)       │◄───────►│ (Lectura optimizada) │
+│ PostgreSQL MASTER   │  WAL    │ PostgreSQL REPLICA  │
+│ (Read/Write)        │─────────►│ (Read-Only)         │
+│ Puerto 5432         │Streaming│ Puerto 5433         │
 └─────────────────────┘         └─────────────────────┘
 ```
 
-### Usuarios de Base de Datos
+### ✨ Características de la Replicación
 
-| Usuario | Propósito | Permisos |
-|---------|-----------|----------|
-| `ecommerce_writer` | Operaciones de escritura | INSERT, UPDATE, DELETE |
-| `ecommerce_reader` | Operaciones de lectura | SELECT (solo vistas materializadas) |
+✅ **Sincronización Automática**: Los cambios en el master se replican en milisegundos  
+✅ **Hot Standby**: La réplica permite lecturas mientras recibe actualizaciones  
+✅ **Lag Mínimo**: Latencia típica < 1MB  
+✅ **Sin Código Adicional**: Spring Boot maneja la separación automáticamente  
+✅ **Alta Disponibilidad**: Configuración lista para failover
 
-### Vistas Materializadas para Soft Delete
+### DataSources Configurados
 
-Las operaciones de lectura utilizan vistas materializadas que filtran automáticamente los registros eliminados (soft delete):
+| DataSource | Puerto | Uso | Modo | Usuario |
+|------------|--------|-----|------|---------|
+| `writeDataSource` (Master) | 5432 | Operaciones de escritura | Read/Write | postgres |
+| `readDataSource` (Replica) | 5433 | Operaciones de lectura | Read-Only | postgres |
 
-- `auth.customer_view` - Usuarios activos
-- `auth.role_view` - Roles activos
-- `catalog.category_view` - Categorías activas
-- `catalog.product_view` - Productos activos
-- `orders.orders_view` - Órdenes no canceladas
+### Scripts de Gestión de Replicación
 
-### Almacenamiento de Tokens en Redis
+```bash
+# Reiniciar y configurar replicación desde cero
+./reset-replication.sh
 
-Los tokens JWT se almacenan en **Redis** en lugar de PostgreSQL para:
-- Mayor velocidad de validación
-- TTL automático (expiración automática)
-- Menor carga en la base de datos
-- Escalabilidad horizontal
+# Verificar estado de la replicación
+./check-replication.sh
+
+# Iniciar servicios normalmente
+docker-compose up -d
+```
+
+### Verificar Sincronización
+
+```bash
+# Ver estado de replicación
+./check-replication.sh
+
+# Insertar en master y verificar en réplica
+docker exec ecommerce-postgres-master psql -U postgres -d ecommerce -c "INSERT INTO ..."
+docker exec ecommerce-postgres-replica psql -U postgres -d ecommerce -c "SELECT * FROM ..."
+```
+
+### 📚 Documentación Detallada
+
+- [DATABASE_SYNC_GUIDE.md](DATABASE_SYNC_GUIDE.md) - Guía completa de sincronización
+- [ecommerce-back-end/CQRS_CONFIG.md](ecommerce-back-end/CQRS_CONFIG.md) - Configuración CQRS en Spring Boot
+- [database/README.md](database/README.md) - Estructura y configuración de la base de datos
 
 ---
 
@@ -87,53 +144,97 @@ Los tokens JWT se almacenan en **Redis** en lugar de PostgreSQL para:
 
 ```
 ecommerce/
-├── docker-compose.yml              # Docker Compose general
-├── Jenkinsfile                     # Pipeline de CI/CD
+├── docker-compose.yml                  # Docker Compose con Master-Replica
+├── reset-replication.sh                # Script para reiniciar replicación
+├── check-replication.sh                # Script para verificar estado
+├── DATABASE_SYNC_GUIDE.md              # Guía completa de sincronización
+├── Jenkinsfile                         # Pipeline de CI/CD
+│
 ├── database/
-│   └── init/                       # Scripts SQL de inicialización
-│       ├── 00-users-and-schemas.sql # Usuarios CQRS, esquemas y ENUMs
-│       ├── 01-auth-schema.sql      # Tablas de autenticación
-│       ├── 02-catalog-schema.sql   # Tablas de catálogo
-│       ├── 03-orders-schema.sql    # Tablas de órdenes
-│       ├── 04-auth-data.sql        # Datos iniciales
-│       ├── 05-catalog-data.sql     # Productos de ejemplo
-│       └── 06-materialized-views.sql # Vistas materializadas
-├── ecommerce-back-end-master/      # Backend (Spring Boot 3.4, Java 21)
-│   └── src/main/java/.../
-│       ├── config/
-│       │   ├── cqrs/               # Configuración CQRS
-│       │   │   ├── DataSourceConfig.java
-│       │   │   ├── DataSourceContextHolder.java
-│       │   │   ├── DataSourceRoutingAspect.java
-│       │   │   ├── DataSourceType.java
-│       │   │   ├── ReadOnly.java
-│       │   │   └── RoutingDataSource.java
-│       │   └── redis/              # Configuración Redis
-│       └── modules/
-│           ├── product/persisten/
-│           │   ├── entity/         # Entidades JPA
-│           │   └── repository/
-│           │       ├── command/    # Repositorios de ESCRITURA
-│           │       └── query/      # Repositorios de LECTURA
-│           ├── user/persisten/
-│           │   ├── entity/
-│           │   └── repository/
-│           │       ├── command/
-│           │       └── query/
-│           └── order/persisten/
-│               ├── entity/
-│               └── repository/
-│                   ├── command/
-│                   └── query/
-└── ecommerce-frond-end-master/     # Frontend (Next.js)
+│   ├── README.md                       # Documentación de base de datos
+│   ├── init/                           # Scripts SQL (solo en master)
+│   │   ├── 00-users-and-schemas.sql   # Esquemas y ENUMs
+│   │   ├── 01-auth-schema.sql         # Tablas de autenticación
+│   │   ├── 02-catalog-schema.sql      # Tablas de catálogo
+│   │   ├── 03-orders-schema.sql       # Tablas de órdenes
+│   │   ├── 04-auth-data.sql           # Datos iniciales
+│   │   ├── 05-catalog-data.sql        # Productos de ejemplo
+│   │   ├── 06-views.sql               # Vistas SQL
+│   │   ├── 07-orders-data.sql         # Datos de órdenes
+│   │   └── 08-homepage-config.sql     # Configuración homepage
+│   │
+│   ├── master-config/                  # Configuración PostgreSQL Master
+│   │   ├── postgresql.conf            # Config WAL y replicación
+│   │   ├── pg_hba.conf                # Autenticación
+│   │   └── setup-replication.sh       # Crear usuario replicator
+│   │
+│   └── replica-config/                 # Configuración PostgreSQL Replica
+│       └── setup-replica.sh           # Configurar streaming
+│
+├── ecommerce-back-end/                 # Backend (Spring Boot 3.4, Java 23)
+│   ├── CQRS_CONFIG.md                 # Documentación CQRS
+│   └── src/main/
+│       ├── resources/
+│       │   └── application-local.yml  # Config DataSources CQRS
+│       │
+│       └── java/.../
+│           ├── config/cqrs/           # Configuración CQRS
+│           │   ├── DataSourceConfig.java      # Define 2 DataSources
+│           │   ├── CommandJpaConfig.java      # Config Write (Master)
+│           │   └── QueryJpaConfig.java        # Config Read (Replica)
+│           │
+│           └── modules/
+│               ├── product/persisten/
+│               │   ├── entity/                # Entidades compartidas
+│               │   │   ├── Product.java
+│               │   │   └── Category.java
+│               │   └── repository/
+│               │       ├── command/           # Escritura (Master)
+│               │       │   ├── IProductCommandRepository.java
+│               │       │   └── ICategoryCommandRepository.java
+│               │       └── query/             # Lectura (Replica)
+│               │           ├── IProductQueryRepository.java
+│               │           └── ICategoryQueryRepository.java
+│               │
+│               ├── user/persisten/
+│               │   ├── entity/
+│               │   │   └── User.java
+│               │   └── repository/
+│               │       ├── command/
+│               │       │   └── IUserCommandRepository.java
+│               │       └── query/
+│               │           └── IUserQueryRepository.java
+│               │
+│               └── order/persisten/
+│                   ├── entity/
+│                   │   ├── Order.java
+│                   │   └── OrderItem.java
+│                   └── repository/
+│                       ├── command/
+│                       │   └── IOrderCommandRepository.java
+│                       └── query/
+│                           └── IOrderQueryRepository.java
+│
+└── ecommerce-frond-end-master/         # Frontend (Next.js)
 ```
 
 ### Estructura CQRS de Repositorios
 
-| Paquete | Propósito | DataSource | Tabla/Vista |
-|---------|-----------|------------|-------------|
-| `persisten/repository/command/` | Escritura (Commands) | `ecommerce_writer` | Tablas directas |
-| `persisten/repository/query/` | Lectura (Queries) | `ecommerce_reader` | Vistas materializadas |
+| Paquete | Propósito | DataSource | Base de Datos |
+|---------|-----------|------------|---------------|
+| `persisten/repository/command/` | Escritura (Commands) | `writeDataSource` | PostgreSQL Master (5432) |
+| `persisten/repository/query/` | Lectura (Queries) | `readDataSource` | PostgreSQL Replica (5433) |
+
+**Nota**: Las entidades están en `persisten/entity/` y son compartidas entre command y query.
+
+### Configuración Spring Boot CQRS
+
+| Archivo | Propósito |
+|---------|-----------|
+| `DataSourceConfig.java` | Define `writeDataSource` y `readDataSource` |
+| `CommandJpaConfig.java` | EntityManager para escritura (puerto 5432) |
+| `QueryJpaConfig.java` | EntityManager para lectura (puerto 5433) |
+| `application-local.yml` | URLs de conexión a Master y Replica |
 
 ### ENUMs en Base de Datos
 
@@ -198,7 +299,8 @@ También puedes usar el script `docker.sh`:
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
-| PostgreSQL | 5432 | Base de datos |
+| PostgreSQL Master | 5432 | Base de datos (escritura) |
+| PostgreSQL Replica | 5433 | Base de datos (lectura) |
 | Redis | 6379 | Cache/Tokens |
 | Backend | 8080 | API Spring Boot |
 | Frontend | 3000 | Next.js |
@@ -214,9 +316,8 @@ También puedes usar el script `docker.sh`:
 ### Base de Datos
 | Usuario | Password | Uso |
 |---------|----------|-----|
-| postgres | postgres | Admin |
-| ecommerce_writer | writer_secure_password_123 | Escritura (CQRS) |
-| ecommerce_reader | reader_secure_password_123 | Lectura (CQRS) |
+| postgres | postgres | Admin / CQRS (Master & Replica) |
+| replicator | replicator_password | Replicación streaming |
 
 ### Redis
 - **Password**: redis_secure_password_123

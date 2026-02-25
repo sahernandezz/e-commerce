@@ -1,6 +1,7 @@
 package com.challenge.ecommercebackend.config.security;
 
 import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IUserCommandRepository;
+import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IUserQueryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,16 +17,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfig {
 
-    private final IUserCommandRepository userCommandRepository;
+    private final IUserQueryRepository userQueryRepository;
 
-    @Autowired
-    public ApplicationConfig(IUserCommandRepository userCommandRepository) {
-        this.userCommandRepository = userCommandRepository;
+    public ApplicationConfig(IUserQueryRepository userQueryRepository) {
+        this.userQueryRepository = userQueryRepository;
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userCommandRepository.findByEmail(username)
+        return username -> userQueryRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 

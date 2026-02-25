@@ -1,14 +1,16 @@
 package com.challenge.ecommercebackend.modules.admin.domain.service;
 
-import com.challenge.ecommercebackend.modules.admin.web.dto.DashboardStats;
-import com.challenge.ecommercebackend.modules.admin.web.dto.TopSellingProduct;
-import com.challenge.ecommercebackend.modules.order.persisten.entity.Order;
+import com.challenge.ecommercebackend.modules.admin.domain.usecase.GetDashboardStatsUseCase;
+import com.challenge.ecommercebackend.modules.admin.domain.usecase.GetRecentOrdersUseCase;
+import com.challenge.ecommercebackend.modules.admin.domain.usecase.GetTopSellingProductsUseCase;
 
-import java.util.List;
-
+/**
+ * Servicio que agrupa todos los use cases de administración.
+ */
 public interface IAdminService {
-    DashboardStats getDashboardStats();
-    List<TopSellingProduct> getTopSellingProducts(Integer limit);
-    List<Order> getRecentOrders(Integer limit);
+
+    GetDashboardStatsUseCase getGetDashboardStatsUseCase();
+    GetTopSellingProductsUseCase getGetTopSellingProductsUseCase();
+    GetRecentOrdersUseCase getGetRecentOrdersUseCase();
 }
 

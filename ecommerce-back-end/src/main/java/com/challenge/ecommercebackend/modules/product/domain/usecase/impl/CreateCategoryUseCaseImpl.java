@@ -4,6 +4,7 @@ import com.challenge.ecommercebackend.modules.product.domain.usecase.CreateCateg
 import com.challenge.ecommercebackend.modules.product.persisten.entity.Category;
 import com.challenge.ecommercebackend.modules.product.persisten.entity.CategoryStatus;
 import com.challenge.ecommercebackend.modules.product.persisten.repository.command.ICategoryCommandRepository;
+import com.challenge.ecommercebackend.modules.product.persisten.repository.query.ICategoryQueryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,11 +14,12 @@ import org.springframework.stereotype.Service;
 public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
 
     private final ICategoryCommandRepository categoryCommandRepository;
+    private final ICategoryQueryRepository categoryQueryRepository;
 
     @Override
     @Transactional
     public Category execute(String name) {
-        if (categoryCommandRepository.findByName(name).isPresent()) {
+        if (categoryQueryRepository.findByName(name).isPresent()) {
             throw new IllegalStateException("Ya existe una categoría con ese nombre");
         }
 
@@ -29,4 +31,3 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
         return categoryCommandRepository.save(category);
     }
 }
-

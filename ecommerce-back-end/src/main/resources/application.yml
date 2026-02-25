@@ -11,6 +11,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: false
     properties:
       hibernate:
@@ -24,6 +26,10 @@ spring:
   graphql:
     graphiql:
       enabled: true
+    path: /graphql
+    cors:
+      allowed-origins: "*"
+      allowed-methods: GET, POST, OPTIONS
 
   mail:
     host: smtp.gmail.com

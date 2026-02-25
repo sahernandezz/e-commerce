@@ -1,26 +1,22 @@
 package com.challenge.ecommercebackend.modules.order.domain.service;
 
-import com.challenge.ecommercebackend.modules.order.persisten.entity.Order;
-import com.challenge.ecommercebackend.modules.order.persisten.entity.OrderStatus;
-import com.challenge.ecommercebackend.modules.order.web.dto.request.InputOrderRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.challenge.ecommercebackend.modules.order.domain.usecase.*;
 
-import java.util.List;
-
+/**
+ * Servicio que agrupa todos los use cases de órdenes.
+ */
 public interface IOrderService {
-    String createOrder(InputOrderRequest inputOrderRequest);
 
-    // Cliente - Mis órdenes
-    Page<Order> getOrdersByCustomerEmail(String email, Pageable pageable);
-    List<Order> getOrdersByCustomerEmail(String email);
-    Order getOrderByIdAndCustomerEmail(Long orderId, String email);
-    void cancelOrderByCustomer(Long orderId, String email);
+    // Use cases de creación
+    CreateOrderUseCase getCreateOrderUseCase();
 
-    // Admin - Gestión de órdenes
-    Page<Order> getAllOrders(Pageable pageable, String status, String customerEmail);
-    Order getOrderById(Long orderId);
-    Order updateOrderStatus(Long orderId, OrderStatus status);
-    void softDeleteOrder(Long orderId);
+    // Use cases de cliente
+    GetOrdersByCustomerUseCase getGetOrdersByCustomerUseCase();
+    GetOrderByIdAndCustomerUseCase getGetOrderByIdAndCustomerUseCase();
+    CancelOrderByCustomerUseCase getCancelOrderByCustomerUseCase();
+
+    // Use cases de administración
+    GetOrdersUseCase getGetOrdersUseCase();
+    UpdateOrderStatusUseCase getUpdateOrderStatusUseCase();
 }
 
