@@ -28,6 +28,7 @@ import java.util.Map;
                 "com.challenge.ecommercebackend.modules.user.persisten.repository.command",
                 "com.challenge.ecommercebackend.modules.product.persisten.repository.command",
                 "com.challenge.ecommercebackend.modules.order.persisten.repository.command",
+                "com.challenge.ecommercebackend.modules.admin.persisten.repository.command",
         },
         entityManagerFactoryRef = "commandEntityManagerFactory",
         transactionManagerRef = "commandTransactionManager"

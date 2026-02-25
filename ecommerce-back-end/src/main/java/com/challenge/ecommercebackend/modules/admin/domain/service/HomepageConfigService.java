@@ -1,6 +1,7 @@
 package com.challenge.ecommercebackend.modules.admin.domain.service;
 
 import com.challenge.ecommercebackend.modules.admin.persisten.entity.HomepageConfig;
+import com.challenge.ecommercebackend.modules.admin.persisten.repository.command.IHomepageConfigCommandRepository;
 import com.challenge.ecommercebackend.modules.admin.persisten.repository.query.IHomepageConfigQueryRepository;
 import com.challenge.ecommercebackend.modules.admin.web.dto.HomepageConfigInput;
 import com.challenge.ecommercebackend.modules.admin.web.dto.HomepageConfigResponse;
@@ -23,23 +24,25 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class HomepageConfigService {
 
-    private final IHomepageConfigQueryRepository homepageConfigRepository;
+    private final IHomepageConfigCommandRepository homepageConfigCommandRepository;
+    private final IHomepageConfigQueryRepository homepageConfigQueryRepository;
     private final IProductQueryRepository productQueryRepository;
     private final ProductMapper productMapper;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "queryTransactionManager")
     public HomepageConfigResponse getHomepageConfig() {
-        HomepageConfig config = homepageConfigRepository.findFirst()
+        HomepageConfig config = homepageConfigQueryRepository.findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Configuracion de homepage no encontrada"));
 
         return buildResponse(config);
     }
 
-    @Transactional
+    @Transactional(transactionManager = "commandTransactionManager")
     public HomepageConfigResponse updateHomepageConfig(HomepageConfigInput input, String username) {
-        HomepageConfig config = homepageConfigRepository.findFirst()
+        // First, fetch from the command repository to ensure we're in the right session
+        HomepageConfig config = homepageConfigCommandRepository.findById(1L)
                 .orElseThrow(() -> new EntityNotFoundException("Configuracion de homepage no encontrada"));
 
         if (input.getFeaturedProductMainId() != null) {
@@ -81,11 +84,12 @@ public class HomepageConfigService {
         config.setUpdatedAt(new Date());
         config.setUpdatedBy(username);
 
-        HomepageConfig saved = homepageConfigRepository.save(config);
+        HomepageConfig saved = homepageConfigCommandRepository.save(config);
         return buildResponse(saved);
     }
 
-    private HomepageConfigResponse buildResponse(HomepageConfig config) {
+    @Transactional(readOnly = true, transactionManager = "queryTransactionManager")
+    protected HomepageConfigResponse buildResponse(HomepageConfig config) {
         HomepageConfigResponse.HomepageConfigResponseBuilder builder = HomepageConfigResponse.builder()
                 .id(config.getId())
                 .showCarousel(config.getShowCarousel())
