@@ -10,7 +10,6 @@ import com.challenge.ecommercebackend.modules.user.persisten.entity.User;
 import com.challenge.ecommercebackend.modules.user.persisten.entity.UserStatus;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IRoleCommandRepository;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.command.IUserCommandRepository;
-import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IRoleQueryRepository;
 import com.challenge.ecommercebackend.modules.user.persisten.repository.query.IUserQueryRepository;
 import com.challenge.ecommercebackend.modules.user.web.dto.request.AuthRequest;
 import com.challenge.ecommercebackend.modules.user.web.dto.request.RegisterInput;
@@ -36,7 +35,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
     private final IUserCommandRepository userCommandRepository;
     private final IUserQueryRepository userQueryRepository;
-    private final IRoleQueryRepository roleQueryRepository;
+    private final IRoleCommandRepository roleCommandRepository;
     private final JwtUtils jwtUtils;
     private final IEmailSenderService mailService;
     private final PasswordEncoder passwordEncoder;
@@ -50,14 +49,14 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
     public AuthenticationServiceImpl(
             IUserCommandRepository userCommandRepository, IUserQueryRepository userQueryRepository,
-            IRoleQueryRepository roleQueryRepository,
+            IRoleCommandRepository roleCommandRepository,
             JwtUtils jwtUtils,
             IEmailSenderService mailService,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager) {
         this.userCommandRepository = userCommandRepository;
         this.userQueryRepository = userQueryRepository;
-        this.roleQueryRepository = roleQueryRepository;
+        this.roleCommandRepository = roleCommandRepository;
         this.jwtUtils = jwtUtils;
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
@@ -100,8 +99,9 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
             throw new RuntimeException("El email ya está registrado");
         }
 
-        // Obtener el rol USER por defecto
-        Role userRole = roleQueryRepository.findByName(RoleName.USER.getCode())
+        // Obtener el rol USER por defecto desde el datasource de escritura (master)
+        // para evitar lag de replicación al registrar nuevos usuarios
+        Role userRole = roleCommandRepository.findByName(RoleName.USER.getCode())
                 .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
 
         // Crear el nuevo usuario con email normalizado

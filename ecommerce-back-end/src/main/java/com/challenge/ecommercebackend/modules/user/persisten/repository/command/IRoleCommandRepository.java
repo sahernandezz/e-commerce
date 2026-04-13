@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface IRoleCommandRepository extends JpaRepository<Role, Integer> {
-
+    Optional<Role> findByName(String name);
 }
 

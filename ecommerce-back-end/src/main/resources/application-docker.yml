@@ -30,7 +30,7 @@ spring:
 
     # DataSource de lectura (Replica)
     read:
-      url: jdbc:postgresql://postgres-replica:5433/ecommerce
+      url: jdbc:postgresql://postgres-replica:5432/ecommerce
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
