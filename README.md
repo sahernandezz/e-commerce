@@ -1,6 +1,6 @@
 # E-commerce
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](./LICENSE)
 
 Plataforma de comercio electrónico full-stack con arquitectura de **monolito modular + CQRS**, replicación PostgreSQL streaming, autenticación JWT, panel de administración y API GraphQL.
 
@@ -487,8 +487,4 @@ Pipeline definido en `Jenkinsfile`:
 - **Email**: admin@ecommerce.com
 - **Password**: admin123
 
----
 
-## LICENCIA
-
-Este proyecto está bajo la [Licencia MIT](./LICENSE). Puedes usar, copiar, modificar y distribuir el software libremente, siempre que incluyas el aviso de copyright original y la licencia.
